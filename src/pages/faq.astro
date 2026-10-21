@@ -1,0 +1,443 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { faqData, mainData } from '../data';
+
+// FAQPage structured data lets Google show these answers directly in results.
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqData.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+};
+
+const slug = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const { communityLinks } = mainData;
+const email = communityLinks.email.replace(/^mailto:/, '');
+const socials = [
+  { label: 'Instagram', url: communityLinks.instagram },
+  { label: 'LinkedIn', url: communityLinks.linkedin },
+  { label: 'YouTube', url: communityLinks.youtube },
+];
+---
+
+<BaseLayout title="FAQ">
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} is:inline />
+  <div class="faq-page container">
+    <aside class="side">
+      <p class="kicker">FAQ</p>
+      <h1>
+        Ask us <span class="anything">anything<i aria-hidden="true">?</i></span>
+      </h1>
+      <p class="intro">
+        The questions we hear most about {mainData.eventInfo.name}. Tap one and the GDG Pune team
+        answers.
+      </p>
+      <label class="search">
+        <span class="sr-only">Search questions</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <input type="search" placeholder="Search questions" autocomplete="off" />
+      </label>
+      <p class="result" aria-live="polite"></p>
+
+      <div class="contact">
+        <p class="contact-title">Still curious?</p>
+        <p>Write to the team and a human will reply.</p>
+        <a class="button" href={communityLinks.email}>{email}</a>
+        <p class="socials">
+          {socials.map((s) => (
+            <a href={s.url} rel="noopener" target="_blank">
+              {s.label}
+            </a>
+          ))}
+        </p>
+      </div>
+    </aside>
+
+    <div class="thread">
+      {faqData.map((item, i) => (
+        <details id={slug(item.question)} data-search={item.question.toLowerCase()}>
+          <summary>
+            <span class="num">{String(i + 1).padStart(2, '0')}</span>
+            <span class="q">{item.question}</span>
+            <span class="toggle" aria-hidden="true" />
+          </summary>
+          <div class="a">
+            <img src="/img/gdg-mark.svg" alt="" width="36" height="36" class="avatar" />
+            <div class="bubble">
+              <span class="typing" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              <p class="text" set:html={item.answer} />
+            </div>
+          </div>
+        </details>
+      ))}
+      <p class="none" hidden>
+        Nothing matches yet. Try another word, or <a href={communityLinks.email}>email us</a>.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const items = [...document.querySelectorAll<HTMLDetailsElement>('.thread details')];
+
+  /* ---------- open as a chat reply: typing dots, then the answer ---------- */
+  function reply(item: HTMLDetailsElement) {
+    const typing = item.querySelector<HTMLElement>('.typing')!;
+    const text = item.querySelector<HTMLElement>('.text')!;
+    const bubble = item.querySelector<HTMLElement>('.bubble')!;
+    gsap.killTweensOf([typing, text, bubble]);
+    gsap
+      .timeline()
+      .set(text, { display: 'none' })
+      .set(typing, { display: 'inline-flex' })
+      .from(item.querySelector('.a'), { y: 16, opacity: 0, duration: 0.35, ease: 'power3.out' })
+      .to({}, { duration: 0.45 })
+      .add(() => {
+        const from = bubble.offsetWidth;
+        const fromH = bubble.offsetHeight;
+        typing.style.display = 'none';
+        text.style.display = '';
+        gsap.from(bubble, { width: from, height: fromH, duration: 0.45, ease: 'expo.out', clearProps: 'width,height' });
+        gsap.from(text, { opacity: 0, duration: 0.4, delay: 0.1 });
+      });
+  }
+
+  items.forEach((item) => {
+    item.querySelector('summary')!.addEventListener('click', () => {
+      // `toggle` fires after the state changes; this runs before, so check the old state.
+      if (!item.open && motion) requestAnimationFrame(() => reply(item));
+    });
+  });
+
+  /* ---------- deep links: /faq/#what-is-devfest opens that question ---------- */
+  const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  if (target instanceof HTMLDetailsElement) {
+    target.open = true;
+    target.scrollIntoView({ block: 'center' });
+  }
+  items.forEach((item) =>
+    item.addEventListener('toggle', () => {
+      if (item.open) history.replaceState(null, '', `#${item.id}`);
+    }),
+  );
+
+  /* ---------- search ---------- */
+  const search = document.querySelector<HTMLInputElement>('.search input')!;
+  const result = document.querySelector<HTMLElement>('.result')!;
+  const none = document.querySelector<HTMLElement>('.none')!;
+  search.addEventListener('input', () => {
+    const words = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    items.forEach((item) => {
+      const text = item.dataset.search! + ' ' + item.querySelector('.text')!.textContent!.toLowerCase();
+      const hit = words.every((w) => text.includes(w));
+      item.hidden = !hit;
+      if (hit) shown++;
+    });
+    none.hidden = shown > 0;
+    result.textContent = words.length ? `${shown} of ${items.length} questions` : '';
+  });
+
+  /* ---------- entrance ---------- */
+  if (motion) {
+    gsap
+      .timeline({ defaults: { ease: 'expo.out' } })
+      .from('.side > *', { y: 30, opacity: 0, duration: 0.9, stagger: 0.07 })
+      .from('.anything i', { rotate: -90, scale: 0, duration: 1, ease: 'elastic.out(1, 0.5)' }, 0.4)
+      .from(
+        '.thread summary',
+        { x: 60, opacity: 0, duration: 0.8, stagger: 0.06, clearProps: 'transform,opacity' },
+        0.15,
+      );
+  }
+</script>
+
+<style>
+  .faq-page {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-12) var(--space-16);
+    align-items: start;
+    padding-block: var(--space-16) var(--space-20);
+  }
+
+  /* Left: title, search, contact */
+  .side {
+    position: sticky;
+    top: 100px;
+  }
+  .kicker {
+    margin: 0 0 var(--space-3);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  h1 {
+    margin: 0 0 var(--space-6);
+    font: 700 clamp(48px, 6vw, 88px) / 0.98 var(--font);
+    letter-spacing: -0.04em;
+  }
+  .anything {
+    white-space: nowrap;
+    color: var(--blue);
+  }
+  .anything i {
+    display: inline-block;
+    margin-left: 0.04em;
+    font-style: normal;
+    color: var(--yellow);
+    transform-origin: 50% 80%;
+  }
+  .intro {
+    max-width: 40ch;
+    margin: 0 0 var(--space-6);
+    color: var(--muted);
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 48px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--gray);
+  }
+  .search:focus-within {
+    outline: 2px solid var(--blue);
+  }
+  .search svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font: 400 var(--text-body) var(--font);
+    outline: none;
+  }
+  .result {
+    min-height: 22px;
+    margin: var(--space-2) 0 var(--space-6);
+    font: 500 var(--text-sm) var(--font);
+    color: var(--blue);
+  }
+  .contact {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--green-pastel);
+  }
+  .contact p {
+    margin: 0 0 var(--space-4);
+  }
+  .contact-title {
+    font: 700 var(--text-h4) var(--font);
+    margin-bottom: var(--space-1) !important;
+  }
+  .socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: var(--space-4) 0 0 !important;
+    font: 500 var(--text-sm) var(--font);
+  }
+  .socials a {
+    color: var(--black);
+  }
+
+  /* Right: the conversation */
+  .thread {
+    display: grid;
+    gap: var(--space-4);
+  }
+  details {
+    scroll-margin-top: 120px;
+  }
+  /* Questions are "your" messages: right-aligned bubbles */
+  summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-left: auto;
+    width: fit-content;
+    max-width: 92%;
+    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6);
+    border-radius: 28px 28px 8px 28px;
+    background: var(--gray);
+    font: 600 var(--text-lg) var(--font);
+    cursor: pointer;
+    list-style: none;
+    transition:
+      background-color 250ms ease,
+      color 250ms ease;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  @media (hover: hover) {
+    summary:hover {
+      background: var(--blue-pastel);
+    }
+  }
+  summary:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 3px;
+  }
+  details[open] summary {
+    background: var(--blue);
+    color: var(--white);
+  }
+  .num {
+    flex: none;
+    font:
+      500 12px / 1 var(--font-code),
+      monospace;
+    opacity: 0.6;
+  }
+  .q {
+    flex: 1;
+  }
+  .toggle {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--black);
+    transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .toggle::before {
+    content: '+';
+    font: 400 22px / 1 var(--font);
+  }
+  details[open] .toggle {
+    transform: rotate(45deg);
+  }
+
+  /* Answers come from the GDG Pune team: left-aligned with an avatar */
+  .a {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-3);
+    max-width: 88%;
+    margin-top: var(--space-3);
+  }
+  .avatar {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    padding: 7px 6px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 0 0 1.5px var(--gray);
+  }
+  .bubble {
+    overflow: hidden;
+    padding: var(--space-4) var(--space-6);
+    border-radius: 28px 28px 28px 8px;
+    background: var(--yellow-pastel);
+  }
+  .text {
+    margin: 0;
+  }
+  .text :global(a) {
+    color: var(--black);
+    font-weight: 600;
+    word-break: break-word;
+  }
+  .typing {
+    display: none;
+    gap: 5px;
+    padding-block: 8px;
+  }
+  .typing i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--black);
+    opacity: 0.35;
+    animation: dot 0.9s ease-in-out infinite;
+  }
+  .typing i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .typing i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  @keyframes dot {
+    50% {
+      opacity: 1;
+      transform: translateY(-4px);
+    }
+  }
+  .none {
+    padding: var(--space-12) 0;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  @media (max-width: 899px) {
+    .faq-page {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-8);
+      padding-top: var(--space-12);
+    }
+    .side {
+      position: static;
+      display: contents;
+    }
+    /* On phones the contact card moves below the questions */
+    .kicker,
+    h1,
+    .intro,
+    .search,
+    .result {
+      grid-column: 1;
+    }
+    .side > * {
+      margin-block: 0;
+    }
+    .contact {
+      order: 2;
+    }
+    .thread {
+      order: 1;
+      margin-top: calc(var(--space-8) * -0.5);
+    }
+    summary {
+      max-width: 100%;
+      font-size: 17px;
+      line-height: 24px;
+    }
+    .a {
+      max-width: 100%;
+    }
+  }
+</style>

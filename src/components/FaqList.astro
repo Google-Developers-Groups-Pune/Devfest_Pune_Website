@@ -1,0 +1,114 @@
+---
+interface Props {
+  items: { question: string; answer: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="faq">
+  {items.map((item) => (
+    <details>
+      <summary>
+        {item.question}
+        <span aria-hidden="true" />
+      </summary>
+      <div class="answer">
+        <p>{item.answer}</p>
+      </div>
+    </details>
+  ))}
+</div>
+
+<script>
+  // Animate opening and closing instead of the native jump. Without JS, <details> still works.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll<HTMLDetailsElement>('.faq details').forEach((item) => {
+    const summary = item.querySelector('summary')!;
+    const answer = item.querySelector<HTMLElement>('.answer')!;
+    summary.addEventListener('click', (e) => {
+      if (reduce) return;
+      e.preventDefault();
+      if (item.open) {
+        const close = answer.animate([{ height: `${answer.offsetHeight}px` }, { height: '0px' }], {
+          duration: 280,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        });
+        item.classList.add('closing');
+        close.onfinish = () => {
+          item.open = false;
+          item.classList.remove('closing');
+        };
+      } else {
+        item.open = true;
+        answer.animate(
+          [
+            { height: '0px', opacity: 0 },
+            { height: `${answer.offsetHeight}px`, opacity: 1 },
+          ],
+          {
+            duration: 380,
+            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+          },
+        );
+      }
+    });
+  });
+</script>
+
+<style>
+  /* Style guide 05 UI surface: grey rounded row with a "+" toggle. */
+  .faq {
+    display: grid;
+    gap: var(--space-3);
+  }
+  details {
+    border-radius: var(--radius-md);
+    background: var(--gray);
+    transition: background-color 250ms ease;
+  }
+  details[open]:not(.closing) {
+    background: var(--yellow-pastel);
+  }
+  .answer {
+    overflow: hidden;
+  }
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  /* "+" that turns into "×" when open */
+  summary span {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--white);
+    transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  summary span::before {
+    content: '+';
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  details[open]:not(.closing) summary span {
+    transform: rotate(45deg);
+  }
+  p {
+    margin: 0;
+    padding: 0 var(--space-6) var(--space-6);
+    color: var(--muted);
+  }
+</style>

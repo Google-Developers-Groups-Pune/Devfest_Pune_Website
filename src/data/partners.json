@@ -1,0 +1,49 @@
+{
+  "partners": [
+    {
+      "name": "Age Of Geeks",
+      "logo": "aog.png",
+      "url": "https://ageofgeeks.org"
+    },
+    {
+      "name": "PuneDAO",
+      "logo": "pdlogo.jpeg",
+      "url": "https://x.com/pune_dao"
+    },
+    {
+      "name": "Code Vipassana",
+      "logo": "codevipassana.jpg",
+      "url": "https://codevipassana.dev"
+    },
+    {
+      "name": "Postman Community Pune",
+      "logo": "postman.png",
+      "url": "https://community.postman.com"
+    },
+    {
+      "name": "MongoDB User Group Pune ",
+      "logo": "mugpune.jpg",
+      "url": "https://www.mongodb.com/community/user-groups/pune"
+    },
+    {
+      "name": "Foss United Pune",
+      "logo": "fosspune.png",
+      "url": "https://fossunited.org/c/pune"
+    },
+    {
+      "name": "Gaia",
+      "logo": "gaia.png",
+      "url": "https://gaianet.ai"
+    },
+    {
+      "name": "APGI",
+      "logo": "APGI.png",
+      "url": "https://www.apgionline.com"
+    },
+    {
+      "name": "TechBrewers",
+      "logo": "techbrewers.png",
+      "url": "https://techbrewers.org"
+    }
+  ]
+}

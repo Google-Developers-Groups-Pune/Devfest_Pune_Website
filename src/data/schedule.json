@@ -1,0 +1,208 @@
+{
+  "commonTrack": {
+    "track": "Common Track",
+    "date": "Oct 23",
+    "schedule": [
+      {
+        "startTime": "9:30 AM",
+        "endTime": "10:00 AM",
+        "session": 1001
+      },
+      {
+        "startTime": "10:00 AM",
+        "endTime": "10:30 AM",
+        "session": 1002
+      },
+      {
+        "startTime": "10:30 AM",
+        "endTime": "11:00 AM",
+        "session": 1003
+      }
+    ]
+  },
+  "parallelTrack": [
+    {
+      "track": "Track 1",
+      "date": "Oct 23",
+      "schedule": [
+        {
+          "startTime": "11:30 AM",
+          "endTime": "12:00 PM",
+          "session": 1004
+        },
+        {
+          "startTime": "12:00 PM",
+          "endTime": "12:30 PM",
+          "session": 1005
+        },
+        {
+          "startTime": "12:30 PM",
+          "endTime": "01:00 PM",
+          "session": 1006
+        },
+        {
+          "startTime": "02:30 PM",
+          "endTime": "03:00 PM",
+          "session": 1009
+        },
+        {
+          "startTime": "03:00 PM",
+          "endTime": "03:30 PM",
+          "session": 1030
+        },
+        {
+          "startTime": "03:30 PM",
+          "endTime": "04:00 PM",
+          "session": 1031
+        },
+        {
+          "startTime": "04:15 PM",
+          "endTime": "05:00 PM",
+          "session": 1022
+        }
+      ]
+    },
+    {
+      "track": "Track 2",
+      "date": "Oct 23",
+      "schedule": [
+        {
+          "startTime": "11:30 AM",
+          "endTime": "12:00 PM",
+          "session": 1010
+        },
+        {
+          "startTime": "12:00 PM",
+          "endTime": "12:30 PM",
+          "session": 1011
+        },
+        {
+          "startTime": "12:30 PM",
+          "endTime": "01:00 PM",
+          "session": 1012
+        },
+        {
+          "startTime": "02:30 PM",
+          "endTime": "03:00 PM",
+          "session": 1013
+        },
+        {
+          "startTime": "03:00 PM",
+          "endTime": "03:30 PM",
+          "session": 1032
+        },
+        {
+          "startTime": "03:30 PM",
+          "endTime": "04:00 PM",
+          "session": 1033
+        },
+        {
+          "startTime": "04:15 PM",
+          "endTime": "05:00 PM",
+          "session": 1023
+        }
+      ]
+    },
+    {
+      "track": "Track 3",
+      "date": "Oct 23",
+      "schedule": [
+        {
+          "startTime": "11:30 AM",
+          "endTime": "12:00 PM",
+          "session": 1014
+        },
+        {
+          "startTime": "12:00 PM",
+          "endTime": "12:30 PM",
+          "session": 1015
+        },
+        {
+          "startTime": "12:30 PM",
+          "endTime": "01:00 PM",
+          "session": 1016
+        },
+        {
+          "startTime": "02:30 PM",
+          "endTime": "03:00 PM",
+          "session": 1017
+        },
+        {
+          "startTime": "03:00 PM",
+          "endTime": "03:30 PM",
+          "session": 1034
+        },
+        {
+          "startTime": "03:30 PM",
+          "endTime": "04:00 PM",
+          "session": 1035
+        },
+        {
+          "startTime": "04:15 PM",
+          "endTime": "05:00 PM",
+          "session": 1024
+        }
+      ]
+    },
+    {
+      "track": "Lightning Talks",
+      "date": "Oct 23",
+      "schedule": [
+        {
+          "startTime": "11:30 AM",
+          "endTime": "12:00 PM",
+          "session": 1018
+        },
+
+        {
+          "startTime": "12:00 PM",
+          "endTime": "12:30 PM",
+          "session": 1020
+        },
+        {
+          "startTime": "12:30 PM",
+          "endTime": "01:00 PM",
+          "session": 1021
+        },
+        {
+          "startTime": "02:30 PM",
+          "endTime": "03:00 PM",
+          "session": 1027
+        },
+
+        {
+          "startTime": "03:00 PM",
+          "endTime": "03:30 PM",
+          "session": 1028
+        },
+        {
+          "startTime": "03:30 PM",
+          "endTime": "04:00 PM",
+          "session": 1029
+        }
+      ]
+    },
+    {
+      "track": "Career Compass",
+      "date": "Oct 23",
+      "schedule": [
+        {
+          "startTime": "12:00 PM",
+          "endTime": "01:00 PM",
+          "session": 1019
+        }
+      ]
+    },
+    {
+      "track": "Founders and CXOs Round Table",
+      "date": "Oct 23",
+      "schedule": [
+        {
+          "startTime": "12:00 PM",
+          "endTime": "01:00 PM",
+          "session": 1036
+        }
+      ]
+    }
+  ]
+}

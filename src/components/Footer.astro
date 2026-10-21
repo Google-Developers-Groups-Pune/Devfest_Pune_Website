@@ -1,0 +1,155 @@
+---
+import { mainData } from '../data';
+
+const { communityLinks, communityName, communityDescription, eventInfo } = mainData;
+const links = [
+  { label: 'GDG Pune chapter', href: communityLinks.chapter },
+  { label: 'Instagram', href: communityLinks.instagram },
+  { label: 'LinkedIn', href: communityLinks.linkedin },
+  { label: 'YouTube', href: communityLinks.youtube },
+  { label: 'Email us', href: communityLinks.email },
+];
+const colors = ['var(--blue)', 'var(--red)', 'var(--yellow)', 'var(--green)'];
+// Letters of the wordmark; spaces are kept so the words wrap naturally.
+const letters = [...eventInfo.name];
+---
+
+<footer>
+  <div class="container">
+    <div class="top">
+      <img
+        src="/img/gdg-pune-logo.svg"
+        alt="Google Developer Groups Pune"
+        width="420"
+        height="60"
+        loading="lazy"
+      />
+      <ul>
+        {links.map((link) => (
+          <li>
+            <a href={link.href} rel="noopener" target="_blank">
+              {link.label}
+            </a>
+          </li>
+        ))}
+        <li>
+          <a href="/coc/">Code of Conduct</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Hover a letter and it jumps in a Google colour. -->
+    <p class="wordmark" aria-hidden="true">
+      {letters.map((ch, i) =>
+        ch === ' ' ? ' ' : <span style={`--c: ${colors[i % colors.length]}; --i: ${i}`}>{ch}</span>,
+      )}
+    </p>
+
+    <div class="bottom">
+      <p>{communityDescription}</p>
+      <p>
+        © {new Date().getFullYear()} {communityName}
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Letters rise in one after another the first time the footer comes into view.
+  const wordmark = document.querySelector('footer .wordmark');
+  if (wordmark) {
+    new IntersectionObserver(
+      ([entry], observer) => {
+        if (!entry.isIntersecting) return;
+        wordmark.classList.add('in');
+        observer.disconnect();
+      },
+      { threshold: 0.3 },
+    ).observe(wordmark);
+  }
+</script>
+
+<style>
+  footer {
+    margin-top: var(--space-16);
+    padding-block: var(--space-16) var(--space-8);
+    border-top: 1px solid var(--border);
+    background: linear-gradient(var(--white), var(--gray));
+    overflow: hidden;
+  }
+  .top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-6);
+  }
+  .top img {
+    width: min(360px, 80vw);
+    height: auto;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul a {
+    color: var(--black);
+    font-weight: 500;
+    text-decoration: none;
+    background: linear-gradient(var(--blue), var(--blue)) left bottom / 0 2px no-repeat;
+    transition: background-size 250ms ease;
+  }
+  ul a:hover {
+    background-size: 100% 2px;
+  }
+
+  .wordmark {
+    margin: var(--space-16) 0 var(--space-8);
+    font: 700 clamp(56px, 13vw, 200px) / 0.9 var(--font);
+    letter-spacing: -0.05em;
+    user-select: none;
+  }
+  .wordmark span {
+    display: inline-block;
+    color: var(--black);
+    transition:
+      transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      color 200ms ease;
+  }
+  .wordmark span:hover {
+    color: var(--c);
+    transform: translateY(-0.12em) rotate(-6deg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .wordmark:not(.in) span {
+      transform: translateY(0.6em);
+      opacity: 0;
+    }
+    .wordmark.in span {
+      transition:
+        transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i) * 40ms),
+        opacity 800ms ease calc(var(--i) * 40ms),
+        color 200ms ease;
+    }
+    .wordmark.in span:hover {
+      transition-delay: 0ms;
+    }
+  }
+
+  .bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-4);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .bottom p {
+    margin: 0;
+    max-width: 70ch;
+  }
+</style>

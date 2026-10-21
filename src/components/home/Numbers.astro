@@ -1,0 +1,59 @@
+---
+import { mainData } from '../../data';
+
+const { pastDevFest } = mainData.eventInfo;
+const colors = ['var(--blue)', 'var(--red)', 'var(--yellow)', 'var(--green)'];
+// "1000+" -> count 1000 with a "+" suffix
+const stats = pastDevFest.stats.map((stat, i) => {
+  const [, value, suffix] = stat.value.match(/^(\d+)(.*)$/) ?? [, '0', ''];
+  return { ...stat, count: Number(value), suffix, color: colors[i % colors.length] };
+});
+---
+
+<section class="numbers section container" aria-labelledby="numbers-heading">
+  <h2 id="numbers-heading" data-scramble>
+    Last year in numbers
+  </h2>
+  <ul>
+    {stats.map((stat) => (
+      <li style={`--stat-color: ${stat.color}`}>
+        <strong>
+          <span data-count={stat.count}>{stat.count}</span>
+          {stat.suffix}
+        </strong>
+        <span class="label">{stat.name}</span>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  ul {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gutter);
+    list-style: none;
+    margin: var(--space-12) 0 0;
+    padding: 0;
+  }
+  li {
+    padding-top: var(--space-6);
+    border-top: 4px solid var(--stat-color);
+  }
+  strong {
+    display: block;
+    font: 700 clamp(56px, 8vw, 120px) / 1 var(--font);
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .label {
+    font: 500 var(--text-lg) var(--font);
+    color: var(--muted);
+  }
+  @media (max-width: 900px) {
+    ul {
+      grid-template-columns: repeat(2, 1fr);
+      row-gap: var(--space-12);
+    }
+  }
+</style>

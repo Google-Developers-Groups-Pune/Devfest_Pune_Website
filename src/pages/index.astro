@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import Numbers from '../components/home/Numbers.astro';
+import Experience from '../components/home/Experience.astro';
+import TopicMarquee from '../components/home/TopicMarquee.astro';
+import Glimpses from '../components/home/Glimpses.astro';
+import SponsorShowcase from '../components/home/SponsorShowcase.astro';
+import VenueCard from '../components/home/VenueCard.astro';
+import RegisterCta from '../components/home/RegisterCta.astro';
+import FaqList from '../components/FaqList.astro';
+import { faqData } from '../data';
+---
+
+<!-- Section order follows style guide 08: hero, community, tracks, glimpses, registration,
+     venue & FAQ. Speakers return here once 2026 speakers are announced (they're on /speakers/).
+     Motion lives in src/scripts/home.ts. -->
+<BaseLayout>
+  <Hero />
+  <Numbers />
+  <Experience />
+  <TopicMarquee />
+
+  <Glimpses />
+
+  <SponsorShowcase />
+
+  <RegisterCta />
+
+  <section class="section container venue-faq" aria-labelledby="venue-heading">
+    <VenueCard />
+    <div>
+      <h2 data-scramble>Questions</h2>
+      <FaqList items={faqData.slice(0, 5)} />
+      <p class="more">
+        <a href="/faq/">All questions</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import '../scripts/home';
+</script>
+
+<style>
+  .venue-faq {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+  .more {
+    margin-top: var(--space-6);
+  }
+  @media (max-width: 900px) {
+    .venue-faq {
+      grid-template-columns: 1fr;
+      gap: var(--space-12);
+    }
+  }
+</style>

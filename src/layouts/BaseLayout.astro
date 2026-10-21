@@ -1,0 +1,128 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { mainData } from '../data';
+
+interface Props {
+  /** Page name, e.g. "Agenda". Omit on the home page. */
+  title?: string;
+  description?: string;
+}
+
+const { title, description = mainData.eventInfo.description.short } = Astro.props;
+const { eventInfo, communityName, communityLinks, seo } = mainData;
+
+// Same title pattern Google has indexed: "Agenda - DevFest Pune 2026 | GDG Pune".
+const baseTitle = `${eventInfo.name} | ${communityName}`;
+const pageTitle = title ? `${title} - ${baseTitle}` : baseTitle;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/thumbnail.png', Astro.site);
+const gtagId = 'G-05RNMF45V4';
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: eventInfo.name,
+    description: eventInfo.description.short,
+    startDate: eventInfo.startDate,
+    endDate: eventInfo.endDate,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    image: [ogImage.href],
+    url: seo.hostUrl,
+    location: {
+      '@type': 'Place',
+      name: eventInfo.venue.name,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: eventInfo.venue.address,
+        addressLocality: mainData.communityLocation.city,
+        addressCountry: 'IN',
+      },
+    },
+    organizer: { '@type': 'Organization', name: communityName, url: communityLinks.chapter },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: communityName,
+    url: seo.hostUrl,
+    logo: new URL('/img/gdg-logo.svg', Astro.site).href,
+    sameAs: [
+      communityLinks.chapter,
+      communityLinks.instagram,
+      communityLinks.linkedin,
+      communityLinks.youtube,
+    ],
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={seo.keywords} />
+    <meta name="author" content={communityName} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#ffffff" />
+    <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-code" />
+    <Font cssVariable="--font-hand" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content={eventInfo.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1920" />
+    <meta property="og:image:height" content="1080" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />
+    {import.meta.env.PROD && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gtagId}`} is:inline />
+        <script is:inline define:vars={{ gtagId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', gtagId);
+        </script>
+      </>
+    )}
+
+    <script is:inline>
+      // Earlier versions of the site registered a service worker. Remove it so returning
+      // visitors don't get a stale cached copy instead of this site.
+      navigator.serviceWorker
+        ?.getRegistrations()
+        .then((list) => list.forEach((r) => r.unregister()));
+    </script>
+  </head>
+  <body>
+    <a class="sr-only" href="#main">
+      Skip to content
+    </a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

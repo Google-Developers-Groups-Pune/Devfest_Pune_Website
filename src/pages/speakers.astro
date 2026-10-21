@@ -1,0 +1,1161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mainData } from '../data';
+import { speakers, speakerStats, trackFilters, trackId, type Speaker } from '../lib/speakers';
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter((part) => /^[A-Z]/.test(part))
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('');
+const where = (s: Speaker) => (s.session.common ? 'Main hall' : s.session.track);
+const saveable = (s: Speaker) => !s.session.common;
+const searchText = (s: Speaker) => `${s.name} ${s.role} ${s.session.title}`.toLowerCase();
+
+// Festival-poster tiers: the keynote gets top billing, then talks, then panels.
+const tiers = [
+  { id: 'Keynote', label: 'Keynote' },
+  { id: 'Talk', label: 'Talks' },
+  { id: 'Panel', label: 'Panels' },
+]
+  .map((tier) => ({
+    ...tier,
+    speakers: speakers
+      .filter((s) => s.session.kind === tier.id)
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }))
+  .filter((tier) => tier.speakers.length);
+
+const statItems = [
+  { value: speakerStats.speakers, label: 'speakers', color: 'blue' },
+  { value: speakerStats.talks, label: 'talks', color: 'red' },
+  { value: speakerStats.panels, label: 'panels', color: 'yellow' },
+  { value: speakerStats.moderators, label: 'moderators', color: 'green' },
+];
+---
+
+<BaseLayout
+  title="Speakers"
+  description={`Meet the ${speakers.length} speakers at ${mainData.eventInfo.name}: engineers, founders and community leaders from Pune and beyond.`}
+>
+  <section class="speakers-page container" data-view="poster">
+    <header>
+      <h1 class="title">
+        <span class="brace" aria-hidden="true">
+          &#123;
+        </span>
+        <span class="word">Speakers</span>
+        <span class="brace" aria-hidden="true">
+          &#125;
+        </span>
+      </h1>
+      <p class="text-lg intro">
+        Engineers, founders and community leaders sharing what they've built. Select anyone to see
+        their session, and star talks to add them to your <a href="/agenda/">agenda plan</a>.
+      </p>
+      <ul class="stats">
+        {statItems.map((item) => (
+          <li style={`--bg: var(--${item.color}-pastel)`}>
+            <strong data-count={item.value}>{item.value}</strong>
+            <span>{item.label}</span>
+          </li>
+        ))}
+      </ul>
+    </header>
+
+    <div class="toolbar">
+      <label class="search">
+        <span class="sr-only">Search speakers, companies or talks</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+        <input type="search" placeholder="Search speakers, companies or talks" autocomplete="off" />
+      </label>
+      <div class="chips" role="group" aria-label="Filter by track">
+        {trackFilters.map((t) => (
+          <button
+            class="chip-filter"
+            data-track={t.id}
+            aria-pressed="false"
+            style={`--dot: var(--${t.color})`}
+          >
+            <i aria-hidden="true" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <p class="result" aria-live="polite"></p>
+    </div>
+    <div class="views" role="group" aria-label="Layout">
+      <button data-view="poster" aria-pressed="true">Lineup</button>
+      <button data-view="grid" aria-pressed="false">Cards</button>
+    </div>
+
+    <div class="poster">
+      {tiers.map((tier) => (
+        <section class:list={['tier', `tier-${tier.id.toLowerCase()}`]} aria-label={tier.label}>
+          <h2 class="tier-label">
+            {tier.label} <span>{tier.speakers.length}</span>
+          </h2>
+          <ul class="lineup">
+            {tier.speakers.map((speaker, i) => (
+              <li
+                class={`mark-${i % 3}`}
+                style={`--c: var(--${speaker.color})`}
+                data-track={trackId(speaker.session.track)}
+                data-search={searchText(speaker)}
+                data-session={speaker.session.id}
+              >
+                <button
+                  class="pname"
+                  data-open={speaker.slug}
+                  data-photo={speaker.photo}
+                  data-initials={initials(speaker.name)}
+                  data-talk={speaker.session.title}
+                  data-when={`${speaker.session.startLabel} · ${where(speaker)}${speaker.moderator ? ' · Moderator' : ''}`}
+                >
+                  <span>{speaker.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <div class="peek" aria-hidden="true">
+        <div class="peek-img"></div>
+        <p class="peek-talk"></p>
+        <p class="peek-when"></p>
+      </div>
+    </div>
+
+    <ul class="grid">
+      {speakers.map((speaker, i) => (
+        <li
+          class="card"
+          style={`--c: var(--${speaker.color}); --bg: var(--${speaker.color}-pastel)`}
+          data-track={trackId(speaker.session.track)}
+          data-search={searchText(speaker)}
+          data-flip-id={speaker.slug}
+        >
+          <div class:list={['portrait', `shape-${i % 4}`]}>
+            {speaker.photo ? (
+              <img
+                src={speaker.photo}
+                alt=""
+                width="400"
+                height="400"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <span class="initials" aria-hidden="true">
+                {initials(speaker.name)}
+              </span>
+            )}
+            {speaker.moderator && <span class="badge">Moderator</span>}
+          </div>
+          <button class="open" data-open={speaker.slug}>
+            <span class="name">{speaker.name}</span>
+          </button>
+          <p class="role">{speaker.role}</p>
+          <p class="talk">
+            <i aria-hidden="true" />
+            <span>{speaker.session.title}</span>
+          </p>
+          <p class="when">
+            {speaker.session.startLabel} · {where(speaker)}
+          </p>
+          {saveable(speaker) && (
+            <button
+              class="save"
+              data-save={speaker.session.id}
+              aria-pressed="false"
+              aria-label={`Save “${speaker.session.title}” to my plan`}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
+              </svg>
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+    <p class="none" hidden>
+      No speakers match. Try another name, company or track.
+    </p>
+
+    <dialog class="details" aria-labelledby="speaker-name">
+      <div class="details-body"></div>
+      <div class="details-actions">
+        <button class="button" data-dialog-save hidden>
+          Save talk to my plan
+        </button>
+        <a class="button button--outline" href="/agenda/">
+          Open the agenda
+        </a>
+        <form method="dialog">
+          <button class="button button--outline">Close</button>
+        </form>
+      </div>
+    </dialog>
+    {speakers.map((speaker) => (
+      <template
+        id={`speaker-${speaker.slug}`}
+        data-session={speaker.session.id}
+        data-saveable={saveable(speaker) ? '' : undefined}
+      >
+        <div
+          class="d-head"
+          style={`--bg: var(--${speaker.color}-pastel); --c: var(--${speaker.color})`}
+        >
+          {speaker.photo ? (
+            <img src={speaker.photo} alt="" width="120" height="120" />
+          ) : (
+            <span class="d-initials">{initials(speaker.name)}</span>
+          )}
+          <div>
+            <h2 id="speaker-name">{speaker.name}</h2>
+            <p>{speaker.moderator ? `Moderator · ${speaker.role}` : speaker.role}</p>
+          </div>
+        </div>
+        <p class="d-meta">
+          {speaker.session.startLabel} to {speaker.session.endLabel} · {where(speaker)} ·{' '}
+          {speaker.session.kind}
+        </p>
+        <h3>{speaker.session.title}</h3>
+        <p>{speaker.session.description}</p>
+        {speaker.session.speakers.length > 1 && (
+          <p class="d-with">
+            With{' '}
+            {speaker.session.speakers
+              .filter((p) => p.name !== speaker.name)
+              .map((p) => p.name)
+              .join(', ')}
+          </p>
+        )}
+        {speaker.links.length > 0 && (
+          <p class="d-links">
+            {speaker.links.map((l) => (
+              <a href={l.url} rel="noopener" target="_blank">
+                {l.label}
+              </a>
+            ))}
+          </p>
+        )}
+      </template>
+    ))}
+  </section>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import { Flip } from 'gsap/Flip';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(Flip, ScrambleTextPlugin, ScrollTrigger);
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.querySelector<HTMLElement>('.speakers-page')!;
+  const cards = [...root.querySelectorAll<HTMLElement>('.card')];
+  const names = [...root.querySelectorAll<HTMLElement>('.lineup li')];
+
+  /* ---------- plan, shared with the agenda page ---------- */
+  const STORE = 'devfest-pune-plan';
+  const saved: Set<string> = (() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORE) ?? '[]'));
+    } catch {
+      return new Set();
+    }
+  })();
+  const persist = () => {
+    try {
+      localStorage.setItem(STORE, JSON.stringify([...saved]));
+    } catch {
+      /* storage unavailable: saving still works for this visit */
+    }
+  };
+  const syncStars = () => {
+    root
+      .querySelectorAll<HTMLElement>('[data-save]')
+      .forEach((b) => b.setAttribute('aria-pressed', String(saved.has(b.dataset.save!))));
+    names.forEach((li) => li.classList.toggle('is-saved', saved.has(li.dataset.session!)));
+  };
+  function toggleSave(id: string, source?: HTMLElement) {
+    if (saved.has(id)) saved.delete(id);
+    else saved.add(id);
+    persist();
+    syncStars();
+    if (motion && source && saved.has(id)) {
+      gsap.fromTo(
+        source,
+        { scale: 0.5, rotate: -40 },
+        { scale: 1, rotate: 0, duration: 0.6, ease: 'back.out(3)' },
+      );
+    }
+  }
+  syncStars();
+  root.addEventListener('click', (e) => {
+    const save = (e.target as HTMLElement).closest<HTMLElement>('.card [data-save]');
+    if (save) toggleSave(save.dataset.save!, save);
+  });
+
+  /* ---------- search and track filters, with cards gliding into place ---------- */
+  const search = root.querySelector<HTMLInputElement>('.search input')!;
+  const chips = [...root.querySelectorAll<HTMLButtonElement>('.chip-filter')];
+  const result = root.querySelector<HTMLElement>('.result')!;
+  const none = root.querySelector<HTMLElement>('.none')!;
+
+  function applyFilters() {
+    const query = search.value.trim().toLowerCase();
+    const active = chips
+      .filter((c) => c.getAttribute('aria-pressed') === 'true')
+      .map((c) => c.dataset.track);
+    const matches = (el: HTMLElement) =>
+      (!query || el.dataset.search!.includes(query)) &&
+      (!active.length || active.includes(el.dataset.track));
+    // On the poster, misses fade back instead of leaving gaps in the lineup.
+    names.forEach((li) => li.classList.toggle('dim', !matches(li)));
+    const state = Flip.getState(cards);
+    let shown = 0;
+    cards.forEach((card) => {
+      const hit = matches(card);
+      card.hidden = !hit;
+      if (hit) shown++;
+    });
+    none.hidden = shown > 0;
+    result.textContent = query || active.length ? `${shown} of ${cards.length} speakers` : '';
+    if (!motion || root.dataset.view !== 'grid') return;
+    Flip.from(state, {
+      duration: 0.6,
+      ease: 'expo.out',
+      absolute: true,
+      stagger: 0.02,
+      onEnter: (els) =>
+        gsap.fromTo(els, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5 }),
+      onLeave: (els) => gsap.to(els, { opacity: 0, scale: 0.85, duration: 0.3 }),
+    });
+  }
+  let timer: number;
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = window.setTimeout(applyFilters, 150);
+  });
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      chip.setAttribute('aria-pressed', String(chip.getAttribute('aria-pressed') !== 'true'));
+      applyFilters();
+    }),
+  );
+
+  /* ---------- speaker details ---------- */
+  const dialog = root.querySelector<HTMLDialogElement>('dialog.details')!;
+  const body = dialog.querySelector<HTMLElement>('.details-body')!;
+  const dialogSave = dialog.querySelector<HTMLButtonElement>('[data-dialog-save]')!;
+  let openSession = '';
+  const syncDialogSave = () =>
+    (dialogSave.textContent = saved.has(openSession)
+      ? 'Remove from my plan'
+      : 'Save talk to my plan');
+
+  root.addEventListener('click', (e) => {
+    const opener = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
+    if (!opener) return;
+    const slug = opener.dataset.open;
+    const template = document.getElementById(`speaker-${slug}`);
+    if (!(template instanceof HTMLTemplateElement)) return;
+    openSession = template.dataset.session!;
+    body.replaceChildren(template.content.cloneNode(true));
+    dialogSave.hidden = template.dataset.saveable === undefined;
+    syncDialogSave();
+    dialog.showModal();
+    if (motion) gsap.from(dialog, { y: 32, opacity: 0, duration: 0.4, ease: 'expo.out' });
+  });
+  dialogSave.addEventListener('click', () => {
+    toggleSave(openSession);
+    syncDialogSave();
+  });
+  dialog.addEventListener('click', (e) => e.target === dialog && dialog.close());
+
+  /* ---------- lineup poster or cards ---------- */
+  const VIEW = 'devfest-pune-speaker-view';
+  const viewButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-view]')];
+  function setView(view: string) {
+    root.dataset.view = view;
+    viewButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    try {
+      localStorage.setItem(VIEW, view);
+    } catch {
+      /* the choice just isn't remembered */
+    }
+    ScrollTrigger.refresh();
+  }
+  viewButtons.forEach((b) => b.addEventListener('click', () => setView(b.dataset.view!)));
+  try {
+    root.dataset.view = localStorage.getItem(VIEW) === 'grid' ? 'grid' : 'poster';
+  } catch {
+    root.dataset.view = 'poster';
+  }
+  viewButtons.forEach((b) =>
+    b.setAttribute('aria-pressed', String(b.dataset.view === root.dataset.view)),
+  );
+
+  /* ---------- portrait that follows the cursor over the lineup ---------- */
+  const poster = root.querySelector<HTMLElement>('.poster')!;
+  const peek = poster.querySelector<HTMLElement>('.peek')!;
+  const peekImg = peek.querySelector<HTMLElement>('.peek-img')!;
+  if (motion && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const moveX = gsap.quickTo(peek, 'x', { duration: 0.5, ease: 'power3' });
+    const moveY = gsap.quickTo(peek, 'y', { duration: 0.5, ease: 'power3' });
+    let current = '';
+    function place(e: PointerEvent) {
+      const box = poster.getBoundingClientRect();
+      // Sit above the cursor so the hovered name stays readable; drop below near the top.
+      const flip = e.clientX > window.innerWidth - 280;
+      const above = e.clientY > peek.offsetHeight + 120;
+      moveX(e.clientX - box.left + (flip ? -peek.offsetWidth - 16 : 16));
+      moveY(e.clientY - box.top + (above ? -peek.offsetHeight - 24 : 40));
+    }
+    poster.addEventListener('pointermove', (e) => {
+      const name = (e.target as HTMLElement).closest<HTMLElement>('.pname');
+      const slug = name && !name.closest('.dim') ? name.dataset.open! : '';
+      if (slug === current) return place(e);
+      current = slug;
+      if (!name || !slug) {
+        gsap.to(peek, { autoAlpha: 0, scale: 0.85, duration: 0.25 });
+        return place(e);
+      }
+      const li = name.parentElement!;
+      peek.style.setProperty('--c', li.style.getPropertyValue('--c'));
+      peekImg.replaceChildren();
+      if (name.dataset.photo) {
+        const img = new Image();
+        img.src = name.dataset.photo;
+        img.alt = '';
+        peekImg.append(img);
+      } else {
+        peekImg.textContent = name.dataset.initials!;
+      }
+      peek.querySelector('.peek-talk')!.textContent = name.dataset.talk!;
+      peek.querySelector('.peek-when')!.textContent = name.dataset.when!;
+      place(e);
+      gsap.fromTo(
+        peek,
+        { autoAlpha: 0.4, scale: 0.9, rotate: gsap.utils.random(-6, 6) },
+        { autoAlpha: 1, scale: 1, rotate: gsap.utils.random(-3, 3), duration: 0.45, ease: 'back.out(2)' },
+      );
+    });
+    poster.addEventListener('pointerleave', () => {
+      current = '';
+      gsap.to(peek, { autoAlpha: 0, scale: 0.85, duration: 0.25 });
+    });
+  }
+
+  /* ---------- entrance ---------- */
+  if (motion) {
+    gsap
+      .timeline({ defaults: { ease: 'expo.out' } })
+      .from('.title .brace', { x: (i) => (i ? -80 : 80), opacity: 0, duration: 1 })
+      .from(
+        '.title .word',
+        { duration: 1, scrambleText: { text: '', chars: '{}<>/01_', revealDelay: 0.2 } },
+        0.1,
+      )
+      .from('.intro', { y: 20, opacity: 0, duration: 0.8 }, 0.3)
+      .from('.stats li', { y: 30, opacity: 0, duration: 0.8, stagger: 0.08 }, 0.4)
+      .from(
+        '[data-count]',
+        { textContent: 0, snap: { textContent: 1 }, duration: 1.6, ease: 'power3.out' },
+        0.4,
+      )
+      .from('.toolbar', { y: 20, opacity: 0, duration: 0.8 }, 0.6);
+
+    // Names rise into the poster tier by tier, in a shuffled order.
+    root.querySelectorAll<HTMLElement>('.tier').forEach((tier) => {
+      gsap
+        .timeline({ scrollTrigger: { trigger: tier, start: 'top 85%' } })
+        .from(tier.querySelector('.tier-label'), { y: 20, opacity: 0, duration: 0.6, ease: 'expo.out' })
+        .from(
+          tier.querySelectorAll('.lineup li'),
+          {
+            yPercent: 120,
+            opacity: 0,
+            rotate: () => gsap.utils.random(-8, 8),
+            duration: 0.9,
+            ease: 'expo.out',
+            stagger: { each: 0.035, from: 'random' },
+          },
+          0.1,
+        );
+    });
+
+    // Cards pop in as they scroll into view.
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).map((e) => e.target);
+        if (!visible.length) return;
+        gsap.fromTo(
+          visible,
+          { y: 50, opacity: 0, rotate: () => gsap.utils.random(-4, 4) },
+          { y: 0, opacity: 1, rotate: 0, duration: 0.8, ease: 'expo.out', stagger: 0.06 },
+        );
+        visible.forEach((el) => io.unobserve(el));
+      },
+      { rootMargin: '0px 0px -10% 0px' },
+    );
+    cards.forEach((card) => {
+      gsap.set(card, { opacity: 0 });
+      io.observe(card);
+    });
+  }
+</script>
+
+<style>
+  .speakers-page {
+    padding-block: var(--space-16) var(--space-20);
+  }
+
+  /* { Speakers } */
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 0.18em;
+    margin-bottom: var(--space-6);
+    font: 700 var(--text-display) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .brace {
+    font-weight: 500;
+    color: var(--red);
+    transform: translateY(-0.06em);
+  }
+  .brace:first-child {
+    color: var(--yellow);
+  }
+  .intro {
+    max-width: 62ch;
+    margin: 0 0 var(--space-8);
+    color: var(--muted);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+    margin: 0 0 var(--space-12);
+    padding: 0;
+    list-style: none;
+  }
+  .stats li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+  }
+  .stats strong {
+    font: 700 var(--text-h2) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .stats span {
+    font: 500 var(--text-body) var(--font);
+  }
+
+  /* Sticky search and filters */
+  .toolbar {
+    position: sticky;
+    top: 67px;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0 calc(var(--gutter) * -1) var(--space-4);
+    padding: var(--space-3) var(--gutter);
+    background: rgb(255 255 255 / 0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 1 340px;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--gray);
+  }
+  .search:focus-within {
+    outline: 2px solid var(--blue);
+  }
+  .search svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font: 400 var(--text-sm) var(--font);
+    outline: none;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .chip-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    font: 500 var(--text-sm) var(--font);
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease;
+  }
+  .chip-filter i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+  .chip-filter:hover {
+    border-color: var(--black);
+  }
+  .chip-filter[aria-pressed='true'] {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+  }
+  .result {
+    margin: 0;
+    font: 500 var(--text-sm) var(--font);
+    color: var(--blue);
+  }
+
+  /* Lineup / cards switch */
+  .views {
+    display: flex;
+    width: fit-content;
+    margin: 0 0 var(--space-6) auto;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--gray);
+  }
+  .views button {
+    min-height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font: 500 var(--text-sm) var(--font);
+    color: var(--black);
+    cursor: pointer;
+    transition: background-color 200ms ease;
+  }
+  .views button[aria-pressed='true'] {
+    background: var(--white);
+    box-shadow: 0 1px 4px rgb(30 30 30 / 0.12);
+  }
+  .speakers-page:not([data-view='grid']) .grid,
+  .speakers-page[data-view='grid'] .poster {
+    display: none;
+  }
+
+  /* Festival lineup poster */
+  .poster {
+    position: relative;
+    display: grid;
+    gap: var(--space-16);
+    padding-block: var(--space-8) var(--space-12);
+    text-align: center;
+  }
+  .tier-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-6);
+    font:
+      500 13px / 20px var(--font-code),
+      monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .tier-label::before,
+  .tier-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .tier-label span {
+    color: var(--blue);
+  }
+  .lineup {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.12em 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+  .tier-keynote .lineup {
+    font: 700 clamp(44px, 9vw, 128px) / 1 var(--font);
+  }
+  .tier-talk .lineup {
+    font: 700 clamp(26px, 4.4vw, 60px) / 1.1 var(--font);
+  }
+  .tier-panel .lineup {
+    font: 500 clamp(21px, 3.1vw, 42px) / 1.15 var(--font);
+  }
+  .lineup li {
+    display: inline-flex;
+    align-items: center;
+  }
+  /* Fade the children, not the li: GSAP animates the li's own opacity on entrance. */
+  .pname,
+  .lineup li::after {
+    transition:
+      opacity 300ms ease,
+      color 250ms ease;
+  }
+  /* Alternate weights give the poster its rhythm */
+  .tier-talk .lineup li:nth-child(even) .pname {
+    font-weight: 400;
+  }
+  .tier-panel .lineup li:nth-child(even) .pname {
+    font-weight: 300;
+  }
+  /* Shape separators in each speaker's track colour */
+  .lineup li:not(:last-child)::after {
+    content: '';
+    flex: none;
+    width: 0.26em;
+    height: 0.26em;
+    margin-inline: 0.32em;
+    background: var(--c);
+  }
+  .mark-0::after {
+    border-radius: 50%;
+  }
+  .mark-1::after {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+  .mark-2::after {
+    clip-path: polygon(
+      50% 0,
+      61% 35%,
+      98% 35%,
+      68% 57%,
+      79% 91%,
+      50% 70%,
+      21% 91%,
+      32% 57%,
+      2% 35%,
+      39% 35%
+    );
+  }
+  .pname {
+    position: relative;
+    padding: 0 0.04em;
+    border: 0;
+    border-radius: 0.12em;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    color: var(--black);
+    cursor: pointer;
+  }
+  .pname:hover,
+  .pname:focus-visible {
+    color: var(--c);
+  }
+  .pname:focus-visible {
+    outline: 2px solid var(--c);
+    outline-offset: 2px;
+  }
+  .lineup:hover li:not(:hover) .pname,
+  .lineup:hover li:not(:hover)::after {
+    opacity: 0.35;
+  }
+  .lineup li.dim .pname,
+  .lineup li.dim::after {
+    opacity: 0.12;
+  }
+  /* A saved talk gets a little star */
+  .is-saved .pname span::after {
+    content: '★';
+    margin-left: 0.08em;
+    font-size: 0.45em;
+    vertical-align: super;
+    color: var(--yellow);
+  }
+  .peek {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    width: 232px;
+    padding: 10px 10px 14px;
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: 0 18px 48px rgb(30 30 30 / 0.18);
+    text-align: left;
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .peek-img {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    margin-bottom: var(--space-3);
+    overflow: hidden;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--c) 22%, white);
+    font: 700 64px / 1 var(--font);
+    color: var(--c);
+  }
+  .peek-img :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .peek-talk {
+    margin: 0 4px 4px;
+    font: 600 var(--text-sm) var(--font);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .peek-when {
+    margin: 0 4px;
+    font:
+      400 12px / 18px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+
+  /* Speaker cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-8) var(--gutter);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background-color 300ms ease;
+  }
+  .card:hover {
+    background: var(--gray);
+  }
+  .card[hidden] {
+    display: none;
+  }
+
+  /* Material-style shapes that morph to a circle on hover */
+  .portrait {
+    position: relative;
+    aspect-ratio: 1;
+    margin-bottom: var(--space-3);
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-radius 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .shape-0 {
+    border-radius: 999px 999px 24px 24px; /* arch */
+  }
+  .shape-1 {
+    border-radius: 50% 12px 50% 12px; /* leaf */
+  }
+  .shape-2 {
+    border-radius: 32%; /* squircle */
+  }
+  .shape-3 {
+    border-radius: 24px 50% 24px 50%; /* petal */
+  }
+  .card:hover .portrait {
+    border-radius: 50%;
+  }
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card:hover .portrait img {
+    transform: scale(1.06);
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    font: 700 clamp(56px, 7vw, 88px) / 1 var(--font);
+    letter-spacing: -0.04em;
+    color: var(--c);
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card:hover .initials {
+    transform: scale(1.1) rotate(-6deg);
+  }
+  .badge {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-3);
+    translate: -50% 0;
+    padding: 2px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    font: 600 12px / 18px var(--font);
+    white-space: nowrap;
+  }
+
+  .open {
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .name {
+    font: 700 var(--text-lg) var(--font);
+    color: var(--black);
+  }
+  .role {
+    margin: 0;
+    font: 400 var(--text-sm) var(--font);
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .talk {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    font: 500 var(--text-sm) var(--font);
+  }
+  .talk i {
+    flex: none;
+    width: 4px;
+    margin-block: 3px;
+    border-radius: 2px;
+    background: var(--c);
+  }
+  .talk span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .when {
+    margin: 0;
+    padding-left: 12px;
+    font:
+      400 12px / 18px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+
+  .save {
+    position: absolute;
+    z-index: 1;
+    top: var(--space-5, 20px);
+    right: var(--space-5, 20px);
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 4px 14px rgb(30 30 30 / 0.15);
+    cursor: pointer;
+  }
+  .save svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--black);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+  }
+  .save[aria-pressed='true'] svg {
+    fill: var(--yellow);
+    stroke: var(--yellow);
+  }
+  .none {
+    padding: var(--space-16) 0;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* Details dialog */
+  .details {
+    width: min(620px, calc(100vw - 32px));
+    padding: 0 0 var(--space-8);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--black);
+    box-shadow: 0 24px 64px rgb(30 30 30 / 0.2);
+    overflow: hidden;
+  }
+  .details::backdrop {
+    background: rgb(30 30 30 / 0.5);
+    backdrop-filter: blur(2px);
+  }
+  .details-body > :global(*:not(.d-head)) {
+    margin-inline: var(--space-8);
+  }
+  .details :global(.d-head) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    background: var(--bg);
+  }
+  .details :global(.d-head img),
+  .details :global(.d-initials) {
+    flex: none;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--white);
+  }
+  .details :global(.d-initials) {
+    display: grid;
+    place-items: center;
+    font: 700 36px / 1 var(--font);
+    color: var(--c);
+  }
+  .details :global(.d-head h2) {
+    margin: 0 0 var(--space-1);
+    font: 700 var(--text-h4) var(--font);
+  }
+  .details :global(.d-head p) {
+    margin: 0;
+    color: var(--black);
+  }
+  .details :global(.d-meta) {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  .details :global(h3) {
+    font: 700 var(--text-lg) var(--font);
+    margin-bottom: var(--space-2);
+  }
+  .details :global(.d-with),
+  .details :global(.d-links) {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .details :global(.d-links) {
+    display: flex;
+    gap: var(--space-4);
+    text-transform: capitalize;
+  }
+  .details-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) var(--space-8) 0;
+  }
+  .details-actions form {
+    margin: 0;
+  }
+
+  @media (max-width: 899px) {
+    .title {
+      font-size: 56px;
+      line-height: 64px;
+    }
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats li {
+      flex-direction: column;
+      gap: 0;
+    }
+    .search {
+      flex: 1 1 100%;
+    }
+    .poster {
+      gap: var(--space-12);
+    }
+    .chips {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .chip-filter {
+      flex: none;
+    }
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4) var(--space-2);
+    }
+    .card {
+      padding: var(--space-2);
+    }
+    .name {
+      font-size: 16px;
+      line-height: 22px;
+    }
+    .save {
+      top: var(--space-3);
+      right: var(--space-3);
+      width: 34px;
+      height: 34px;
+    }
+    .details :global(.d-head) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+      padding: var(--space-6);
+    }
+    .details-body > :global(*:not(.d-head)),
+    .details-actions {
+      margin-inline: var(--space-6);
+    }
+  }
+</style>

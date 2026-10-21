@@ -1,0 +1,185 @@
+---
+import { sponsorsData, partnersData } from '../../data';
+
+const [titleTier, ...otherTiers] = sponsorsData.currentSponsors;
+const others = otherTiers.flatMap((tier) =>
+  tier.sponsors.map((s) => ({ ...s, tier: tier.category, src: `/img/sponsors/${s.logo}` })),
+);
+const partners = partnersData.partners.map((p) => ({
+  name: p.name,
+  link: p.url,
+  tier: 'Community partner',
+  src: `/img/partners/${p.logo}`,
+}));
+const rows = [others, partners];
+---
+
+<section class="showcase section" aria-labelledby="sponsors-heading">
+  <div class="container">
+    <div class="head">
+      <h2 id="sponsors-heading" data-scramble>
+        Sponsors and partners
+      </h2>
+      <a class="button button--outline" href="/sponsors/">
+        See all sponsors
+      </a>
+    </div>
+
+    {titleTier && (
+      <div class="spotlight">
+        {titleTier.sponsors.map((sponsor) => (
+          <a class="title-card" href={sponsor.link} rel="noopener" target="_blank" data-tilt>
+            <span class="tier">{titleTier.category}</span>
+            <img src={`/img/sponsors/${sponsor.logo}`} alt={sponsor.name} />
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <!-- Every other sponsor and community partner, on two rows that loop in opposite directions -->
+  {rows.map((row, r) => (
+    <div class:list={['logo-marquee', r % 2 && 'reverse']}>
+      <ul class="track">
+        {[0, 1].map((copy) =>
+          row.map((item) => (
+            <li aria-hidden={copy ? 'true' : undefined}>
+              <a href={item.link} rel="noopener" target="_blank" tabindex={copy ? -1 : undefined}>
+                <img src={item.src} alt={item.name} loading="lazy" decoding="async" />
+                <span>{item.tier}</span>
+              </a>
+            </li>
+          )),
+        )}
+      </ul>
+    </div>
+  ))}
+</section>
+
+<style>
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+  .head h2 {
+    margin: 0;
+  }
+
+  /* Title sponsor: a big card with the turning Google-colour ring */
+  @property --turn {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+  .spotlight {
+    display: grid;
+    gap: var(--gutter);
+    margin-bottom: var(--space-12);
+    perspective: 1000px;
+  }
+  .title-card {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 240px;
+    padding: var(--space-12);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(var(--white), var(--white)) padding-box,
+      conic-gradient(
+          from var(--turn),
+          var(--blue),
+          var(--red),
+          var(--yellow),
+          var(--green),
+          var(--blue)
+        )
+        border-box;
+    border: 4px solid transparent;
+    animation: turn 8s linear infinite;
+    transform-style: preserve-3d;
+    transition: box-shadow 300ms ease;
+  }
+  .title-card:hover {
+    box-shadow: 0 30px 80px rgb(66 133 244 / 0.2);
+  }
+  @keyframes turn {
+    to {
+      --turn: 360deg;
+    }
+  }
+  .title-card img {
+    max-height: 110px;
+    width: auto;
+    transform: translateZ(40px);
+  }
+  .tier {
+    position: absolute;
+    top: var(--space-4);
+    left: var(--space-6);
+    font: 500 var(--text-sm) var(--font);
+    color: var(--muted);
+  }
+
+  /* Logo marquees */
+  .logo-marquee {
+    overflow: hidden;
+    padding-block: var(--space-2);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .track {
+    display: flex;
+    gap: var(--space-4);
+    width: max-content;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    animation: slide 60s linear infinite;
+  }
+  .reverse .track {
+    animation-direction: reverse;
+  }
+  .logo-marquee:hover .track {
+    animation-play-state: paused;
+  }
+  @keyframes slide {
+    to {
+      transform: translateX(calc(-50% - var(--space-2)));
+    }
+  }
+  .track a {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    place-items: center;
+    gap: var(--space-2);
+    width: 200px;
+    height: 132px;
+    padding: var(--space-4);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    text-decoration: none;
+    transition:
+      transform 250ms ease,
+      border-color 250ms ease;
+  }
+  .track a:hover {
+    transform: translateY(-6px) rotate(-1.5deg);
+    border-color: var(--black);
+  }
+  .track img {
+    max-height: 64px;
+    max-width: 150px;
+    width: auto;
+    object-fit: contain;
+  }
+  .track span {
+    font: 500 12px / 18px var(--font);
+    color: var(--muted);
+  }
+</style>

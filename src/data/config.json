@@ -1,0 +1,131 @@
+{
+  "communityName": "GDG Pune",
+  "communityLocation": {
+    "country": "India",
+    "city": "Pune"
+  },
+  "communityDescription": "GDG is an independent group; our activities and the opinions expressed here should in no way be linked to Google, the corporation.",
+  "communityLinks": {
+    "page": "https://devfest.gdgpune.in/",
+    "website": "https://devfest.gdgpune.in/",
+    "chapter": "https://gdg.community.dev/gdg-pune/",
+    "instagram": "https://www.instagram.com/gdgpune/",
+    "linkedin": "https://www.linkedin.com/company/gdgpune/",
+    "youtube": "https://www.youtube.com/@gdgpune",
+    "email": "mailto:connect@gdgpune.in"
+  },
+  "eventInfo": {
+    "name": "DevFest Pune 2026",
+    "theme": {
+      "words": ["Build", "Secure", "Scale"],
+      "topics": "Agentic AI, Tokenization & Quantum"
+    },
+    "date": "Sunday, 13th December 2026",
+    "time": "9 AM - 5 PM IST",
+    "startDate": "2026-12-13T09:00:00+05:30",
+    "endDate": "2026-12-13T17:00:00+05:30",
+    "venue": {
+      "name": "JW Marriott Hotel Pune",
+      "address": "JW Marriott Hotel, SB Road, Pune, 411016",
+      "map_link": "https://maps.app.goo.gl/hwfLVnqeGr3z9pV39"
+    },
+    "registeration": {
+      "link": "https://konfhub.com/devfestpune2025",
+      "end_date": "2026-12-13"
+    },
+    "callForSpeakers": {
+      "link": "https://sessionize.com/devfest-pune-2026/"
+    },
+    "description": {
+      "tagline": "India's largest community-driven tech conference, by GDG Pune.",
+      "short": "DevFest Pune is India's largest community driven tech conference, hosted by Google Developer Groups Pune, bringing together industry experts for an in-depth exploration of emerging technologies, best practices, and innovative solutions.",
+      "additionalText": "Now in its 13th edition, DevFest Pune continues to attract passionate professionals from diverse industries, including developers, architects, product owners, team leaders, coaches, and managers, all eager to expand their knowledge and stay ahead of the curve."
+    },
+    "stats": [
+      {
+        "name": "Speakers",
+        "value": "35+",
+        "color": "#C3ECF6",
+        "image": "img/common/blue.png"
+      },
+      {
+        "name": "Participants",
+        "value": "1000+",
+        "color": "#F8D8D8",
+        "image": "img/common/pink.png"
+      },
+      {
+        "name": "Sessions",
+        "value": "25+",
+        "color": "#CCF6C5",
+        "image": "img/common/green.png"
+      },
+      {
+        "name": "Day(s)",
+        "value": "1",
+        "color": "#FFE7A5",
+        "image": "img/common/yellow.png"
+      }
+    ],
+    "whatToExpect": [
+      {
+        "title": "Technical content",
+        "description": "Worldwide events hosted by the Google Developer Groups community, featuring leading experts on Google technologies in areas like Mobile development, AI, Blockchain, AI/VR, Cybersecurity, Machine Learning and so much more!"
+      },
+      {
+        "title": "Panel Discussions",
+        "description": "Full-day panel-discussions, all centered on your favorite trending technologies."
+      },
+      {
+        "title": "Networking",
+        "description": "Meet and connect with other developers in your community."
+      }
+    ],
+    "expectation": ["AI", "Technology", "Product", "Innovation", "Startups", "Learning"],
+    "pastDevFest": {
+      "summery": "DevFest 2025 was an unforgettable experience, uniting 1,000+ passionate participants and 35+ expert speakers for a day filled with inspiration and learning. Attendees engaged in 25+ dynamic sessions, featuring lightning talks, workshops, and discussions on cutting-edge technologies. The event showcased the power of community, collaboration, and knowledge exchange, with participants gaining insights into the latest trends and tools in tech.",
+      "images": ["rectangle-1.jpg", "rectangle-2.jpg", "rectangle-3.jpg"],
+      "stats": [
+        {
+          "name": "Speakers",
+          "value": "35+"
+        },
+        {
+          "name": "Participants",
+          "value": "1000+"
+        },
+        {
+          "name": "Sessions",
+          "value": "25+"
+        },
+        {
+          "name": "Day(s)",
+          "value": "1"
+        }
+      ],
+      "gallery": [
+        {
+          "file": "rectangle-1.jpg",
+          "caption": "The DevFest Pune family, 2025",
+          "featured": true
+        },
+        {
+          "file": "rectangle-2.jpg",
+          "caption": "A full house at JW Marriott"
+        },
+        {
+          "file": "rectangle-3.jpg",
+          "caption": "Gen AI panel, Track 1"
+        },
+        {
+          "file": "group-image-2024.jpg",
+          "caption": "The 2024 crew"
+        }
+      ]
+    }
+  },
+  "seo": {
+    "keywords": "GDG, DevFest, Google, DevFest",
+    "hostUrl": "https://devfest.gdgpune.in/"
+  }
+}

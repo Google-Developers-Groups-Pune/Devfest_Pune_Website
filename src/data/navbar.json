@@ -1,0 +1,48 @@
+[
+  {
+    "name": "Home",
+    "path": "/",
+    "visible": true
+  },
+  {
+    "name": "Agenda",
+    "path": "/agenda/",
+    "visible": true
+  },
+  {
+    "name": "Speakers",
+    "path": "/speakers/",
+    "visible": true
+  },
+  {
+    "name": "Badge",
+    "path": "/badge/",
+    "visible": true
+  },
+  {
+    "name": "Sponsors",
+    "path": "/sponsors/",
+    "visible": true
+  },
+  {
+    "name": "Registration",
+    "path": "/register/",
+    "visible": true,
+    "mobileMenuOnly": true
+  },
+  {
+    "name": "Team",
+    "path": "/team/",
+    "visible": true
+  },
+  {
+    "name": "FAQ",
+    "path": "/faq/",
+    "visible": true
+  },
+  {
+    "name": "Agenda",
+    "path": "/agenda/",
+    "visible": false
+  }
+]

@@ -1,0 +1,827 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mainData } from '../data';
+import { crew, organizers, squads, squadById, squadCounts } from '../lib/team';
+
+// Photos live in src/assets so Astro can resize the 500px to 4MB originals.
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/team/*', { eager: true });
+const photo = (file?: string) => (file ? files[`../assets/team/${file}`]?.default : undefined);
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('');
+
+const leads = crew.filter((m) => m.lead).length;
+const total = organizers.length + crew.length;
+const shapes = ['arch', 'squircle', 'leaf', 'petal'];
+
+// Two rows of faces for the hero strip, each repeated so the loop is seamless.
+const faces = crew.filter(
+  (m, i, all) => photo(m.image) && all.findIndex((o) => o.image === m.image) === i,
+);
+const rows = [faces.filter((_, i) => i % 2 === 0), faces.filter((_, i) => i % 2 === 1)];
+---
+
+<BaseLayout
+  title="Team"
+  description={`Meet the ${total} GDG Pune organizers and volunteers who make ${mainData.eventInfo.name} happen.`}
+>
+  <div class="team-page">
+    <header class="container hero">
+      <p class="kicker">The people behind DevFest Pune</p>
+      <h1>
+        <span class="count" data-count={total}>{total}</span> people.{' '}
+        <span class="one">One DevFest.</span>
+      </h1>
+      <p class="text-lg intro">
+        Every stage cue, photo, post and badge at DevFest Pune comes from GDG Pune organizers and
+        volunteers.
+      </p>
+      <ul class="tally">
+        <li style="--bg: var(--blue-pastel)">
+          <strong>{organizers.length}</strong> organizers
+        </li>
+        <li style="--bg: var(--yellow-pastel)">
+          <strong>{leads}</strong> squad leads
+        </li>
+        <li style="--bg: var(--green-pastel)">
+          <strong>{crew.length - leads}</strong> volunteers
+        </li>
+        <li style="--bg: var(--red-pastel)">
+          <strong>{squads.length}</strong> squads
+        </li>
+      </ul>
+    </header>
+
+    <div class="strip" aria-hidden="true">
+      {rows.map((row, r) => (
+        <div class="strip-row" data-dir={r ? 1 : -1}>
+          {[...row, ...row].map((m, i) => (
+            <span class:list={['face', shapes[(i + r) % 4]]}>
+              <Image src={photo(m.image)!} alt="" width={128} height={128} loading="lazy" />
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+
+    <section class="container block" aria-labelledby="organizers-title">
+      <div class="block-head">
+        <h2 id="organizers-title">Organizers</h2>
+        <p>GDG Pune organizers and Women Techmakers ambassadors.</p>
+      </div>
+      <ul class="organizers">
+        {organizers.map((o, i) => {
+          const img = photo(o.image);
+          return (
+            <li class="organizer" style={`--c: var(--${['blue', 'red', 'yellow', 'green'][i % 4]})`}>
+              <div class:list={['org-photo', shapes[i % 4]]}>
+                {img ? (
+                  <Image src={img} alt="" width={480} height={480} />
+                ) : (
+                  <span class="initials">{initials(o.name)}</span>
+                )}
+              </div>
+              <p class="org-role">{o.role}</p>
+              <h3>
+                <button class="open" data-open={`team-${o.slug}`}>
+                  {o.name}
+                </button>
+              </h3>
+              {o.bio && <p class="org-bio">{o.bio}</p>}
+              <p class="links">
+                {o.links.map((l) => (
+                  <a href={l.url} rel="noopener" target="_blank">
+                    {l.label}
+                  </a>
+                ))}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+
+    <section class="container block" aria-labelledby="crew-title">
+      <div class="block-head">
+        <h2 id="crew-title">The crew</h2>
+        <p>
+          {crew.length} volunteers in {squads.length} squads. Pick a squad, or select anyone to read
+          their story.
+        </p>
+      </div>
+
+      <div class="squads" role="group" aria-label="Filter by squad">
+        <button class="squad" data-squad="all" aria-pressed="true">
+          Everyone <span>{crew.length}</span>
+        </button>
+        {squads.map((s) => (
+          <button
+            class="squad"
+            data-squad={s.id}
+            data-label={s.label}
+            aria-pressed="false"
+            style={`--c: var(--${s.color}); --bg: var(--${s.color}-pastel)`}
+          >
+            <i aria-hidden="true" />
+            {s.label} <span>{squadCounts[s.id]}</span>
+          </button>
+        ))}
+      </div>
+      <p class="result" aria-live="polite"></p>
+
+      <ul class="wall">
+        {crew.map((m, i) => {
+          const img = photo(m.image);
+          const main = m.squads[0] ? squadById[m.squads[0]] : undefined;
+          return (
+            <li
+              class:list={['member', { lead: m.lead }]}
+              data-squads={m.squads.join(' ')}
+              data-flip-id={m.slug}
+              style={`--c: var(--${main?.color ?? 'blue'}); --bg: var(--${main?.color ?? 'blue'}-pastel)`}
+            >
+              <div class:list={['m-photo', `s-${i % 4}`]}>
+                {img ? (
+                  <Image src={img} alt="" width={320} height={320} loading="lazy" />
+                ) : (
+                  <span class="initials">{initials(m.name)}</span>
+                )}
+                {m.lead && <span class="lead-tag">Lead</span>}
+              </div>
+              <button class="open" data-open={`team-${m.slug}`}>
+                <span class="m-name">{m.name}</span>
+              </button>
+              <p class="m-squad">{m.squads.map((id) => squadById[id].label).join(' · ')}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+
+    <dialog class="details" aria-labelledby="member-name">
+      <div class="details-body"></div>
+      <form method="dialog">
+        <button class="button button--outline">Close</button>
+      </form>
+    </dialog>
+
+    {organizers.map((o) => {
+      const img = photo(o.image);
+      return (
+        <template id={`team-${o.slug}`}>
+          <div class="d-head" style="--bg: var(--blue-pastel)">
+            {img ? <Image src={img} alt="" width={192} height={192} /> : <span class="d-initials">{initials(o.name)}</span>}
+            <div>
+              <h2 id="member-name">{o.name}</h2>
+              <p>{o.role}</p>
+            </div>
+          </div>
+          {o.bio && <p class="d-bio">{o.bio}</p>}
+          <p class="d-links">
+            {o.links.map((l) => (
+              <a href={l.url} rel="noopener" target="_blank">
+                {l.label}
+              </a>
+            ))}
+          </p>
+        </template>
+      );
+    })}
+    {crew.map((m) => {
+      const img = photo(m.image);
+      const main = m.squads[0] ? squadById[m.squads[0]] : undefined;
+      return (
+        <template id={`team-${m.slug}`}>
+          <div class="d-head" style={`--bg: var(--${main?.color ?? 'blue'}-pastel)`}>
+            {img ? <Image src={img} alt="" width={192} height={192} /> : <span class="d-initials">{initials(m.name)}</span>}
+            <div>
+              <h2 id="member-name">{m.name}</h2>
+              <p>{m.title}</p>
+            </div>
+          </div>
+          <p class="d-squads">
+            {m.lead && <span class="d-lead">Squad lead</span>}
+            {m.squads.map((id) => (
+              <span style={`--bg: var(--${squadById[id].color}-pastel)`}>{squadById[id].label}</span>
+            ))}
+          </p>
+          {m.bio && m.bio.split(/\n+/).map((para) => <p class="d-bio">{para}</p>)}
+          {m.links.length > 0 && (
+            <p class="d-links">
+              {m.links.map((l) => (
+                <a href={l.url} rel="noopener" target="_blank">
+                  {l.label}
+                </a>
+              ))}
+            </p>
+          )}
+        </template>
+      );
+    })}
+  </div>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { Flip } from 'gsap/Flip';
+
+  gsap.registerPlugin(ScrollTrigger, Flip);
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.querySelector<HTMLElement>('.team-page')!;
+  const members = [...root.querySelectorAll<HTMLElement>('.member')];
+  let reveal: ScrollTrigger[] = [];
+
+  /* ---------- squad filter ---------- */
+  const chips = [...root.querySelectorAll<HTMLButtonElement>('.squad')];
+  const result = root.querySelector<HTMLElement>('.result')!;
+  chips.forEach((chip) =>
+    chip.addEventListener('click', () => {
+      const squad = chip.dataset.squad!;
+      // Faces still waiting for their scroll-in would otherwise stay invisible.
+      reveal.forEach((t) => t.kill());
+      gsap.set(members, { opacity: 1, y: 0, scale: 1 });
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+      const state = Flip.getState(members);
+      let shown = 0;
+      members.forEach((m) => {
+        const hit = squad === 'all' || m.dataset.squads!.split(' ').includes(squad);
+        m.hidden = !hit;
+        if (hit) shown++;
+      });
+      result.textContent = squad === 'all' ? '' : `${shown} people in ${chip.dataset.label}`;
+      if (!motion) return;
+      Flip.from(state, {
+        duration: 0.6,
+        ease: 'expo.out',
+        absolute: true,
+        stagger: 0.015,
+        onEnter: (els) =>
+          gsap.fromTo(els, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5 }),
+        onLeave: (els) => gsap.to(els, { opacity: 0, scale: 0.8, duration: 0.3 }),
+      });
+    }),
+  );
+
+  /* ---------- bio dialog ---------- */
+  const dialog = root.querySelector<HTMLDialogElement>('dialog.details')!;
+  const body = dialog.querySelector<HTMLElement>('.details-body')!;
+  root.addEventListener('click', (e) => {
+    const opener = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
+    const template = opener && document.getElementById(opener.dataset.open!);
+    if (!(template instanceof HTMLTemplateElement)) return;
+    body.replaceChildren(template.content.cloneNode(true));
+    dialog.showModal();
+    if (motion) gsap.from(dialog, { y: 32, opacity: 0, duration: 0.4, ease: 'expo.out' });
+  });
+  dialog.addEventListener('click', (e) => e.target === dialog && dialog.close());
+
+  /* ---------- motion ---------- */
+  if (motion) {
+    gsap
+      .timeline({ defaults: { ease: 'expo.out' } })
+      .from('.hero .kicker', { y: 20, opacity: 0, duration: 0.8 })
+      .from('.hero h1', { y: 60, opacity: 0, duration: 1.1 }, 0.05)
+      .from(
+        '.hero [data-count]',
+        { textContent: 0, snap: { textContent: 1 }, duration: 1.8, ease: 'power3.out' },
+        0.1,
+      )
+      .from('.hero .one', { backgroundSize: '0% 32%', duration: 1.2, ease: 'power3.inOut' }, 0.6)
+      .from('.hero .intro', { y: 20, opacity: 0, duration: 0.8 }, 0.3)
+      .from('.tally li', { y: 30, opacity: 0, duration: 0.8, stagger: 0.07 }, 0.4)
+      .from('.strip-row', { opacity: 0, duration: 1 }, 0.5);
+
+    // Two rows of faces drifting in opposite directions, nudged by scroll speed.
+    root.querySelectorAll<HTMLElement>('.strip-row').forEach((row) => {
+      const dir = Number(row.dataset.dir);
+      const loop = gsap.fromTo(
+        row,
+        { xPercent: dir < 0 ? 0 : -50 },
+        { xPercent: dir < 0 ? -50 : 0, duration: 60, ease: 'none', repeat: -1 },
+      );
+      ScrollTrigger.create({
+        trigger: '.strip',
+        start: 'top bottom',
+        end: 'bottom top',
+        onUpdate: (self) => {
+          const boost = 1 + Math.min(Math.abs(self.getVelocity()) / 300, 6);
+          gsap.to(loop, { timeScale: boost, duration: 0.2, overwrite: true });
+          gsap.to(loop, { timeScale: 1, duration: 1, delay: 0.2 });
+        },
+      });
+    });
+
+    gsap.utils.toArray<HTMLElement>('.block-head').forEach((head) =>
+      gsap.from(head.children, {
+        y: 40,
+        opacity: 0,
+        duration: 0.9,
+        stagger: 0.08,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: head, start: 'top 85%' },
+      }),
+    );
+    ScrollTrigger.batch('.organizer', {
+      start: 'top 88%',
+      once: true,
+      onEnter: (els) =>
+        gsap.from(els, {
+          y: 80,
+          rotate: (i) => (i % 2 ? 3 : -3),
+          opacity: 0,
+          duration: 1,
+          stagger: 0.1,
+          ease: 'expo.out',
+        }),
+    });
+    gsap.set(members, { opacity: 0 });
+    reveal = ScrollTrigger.batch(members, {
+      start: 'top 92%',
+      once: true,
+      onEnter: (els) =>
+        gsap.fromTo(
+          els,
+          { y: 40, scale: 0.9, opacity: 0 },
+          { y: 0, scale: 1, opacity: 1, duration: 0.7, stagger: 0.04, ease: 'back.out(1.6)' },
+        ),
+    });
+  }
+</script>
+
+<style>
+  .team-page {
+    padding-block: var(--space-16) var(--space-20);
+    overflow-x: clip;
+  }
+
+  /* Hero */
+  .kicker {
+    margin: 0 0 var(--space-4);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  h1 {
+    margin: 0 0 var(--space-6);
+    font: 700 clamp(48px, 8vw, 112px) / 0.98 var(--font);
+    letter-spacing: -0.04em;
+  }
+  .count {
+    color: var(--blue);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Highlighter stroke that sweeps in under "One DevFest." */
+  .one {
+    display: inline;
+    padding-inline: 0.06em;
+    background: linear-gradient(var(--yellow-halftone), var(--yellow-halftone)) 0 88% / 100% 32%
+      no-repeat;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .intro {
+    max-width: 56ch;
+    margin: 0 0 var(--space-8);
+    color: var(--muted);
+  }
+  .tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tally li {
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    font: 500 var(--text-body) var(--font);
+  }
+  .tally strong {
+    font-weight: 700;
+  }
+
+  /* Face strip */
+  .strip {
+    display: grid;
+    gap: var(--space-3);
+    margin-block: var(--space-16) var(--space-8);
+  }
+  .strip-row {
+    display: flex;
+    gap: var(--space-3);
+    width: max-content;
+    padding-right: var(--space-3); /* keeps the -50% loop seamless */
+  }
+  .face {
+    flex: none;
+    width: clamp(72px, 9vw, 112px);
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--gray);
+  }
+  .face img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .arch {
+    border-radius: 999px 999px 16px 16px;
+  }
+  .squircle {
+    border-radius: 32%;
+  }
+  .leaf {
+    border-radius: 50% 12px 50% 12px;
+  }
+  .petal {
+    border-radius: 16px 50% 16px 50%;
+  }
+
+  /* Section heads */
+  .block {
+    padding-top: var(--space-16);
+  }
+  .block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+  .block-head h2 {
+    margin: 0;
+    font: 700 var(--text-h2) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .block-head p {
+    max-width: 48ch;
+    margin: 0;
+    color: var(--muted);
+  }
+
+  /* Organizers */
+  .organizers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-8) var(--gutter);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .organizer {
+    position: relative;
+  }
+  .org-photo {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    margin-bottom: var(--space-4);
+    overflow: hidden;
+    background: var(--gray);
+    transition: border-radius 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* A colour wash rises behind the photo on hover */
+  .org-photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--c);
+    mix-blend-mode: multiply;
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .organizer:hover .org-photo {
+    border-radius: var(--radius-lg);
+  }
+  .organizer:hover .org-photo::after {
+    opacity: 0.18;
+  }
+  .org-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .organizer:hover .org-photo img {
+    transform: scale(1.05);
+  }
+  .org-role {
+    display: inline-block;
+    margin: 0 0 var(--space-2);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--c) 18%, white);
+    font: 500 12px / 18px var(--font);
+  }
+  .organizer h3 {
+    margin: 0 0 var(--space-2);
+    font: 700 var(--text-h4) var(--font);
+    letter-spacing: -0.01em;
+  }
+  .org-bio {
+    margin: 0 0 var(--space-3);
+    font: var(--text-sm) var(--font);
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .links {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: var(--space-4);
+    margin: 0;
+    font: 500 var(--text-sm) var(--font);
+    text-transform: capitalize;
+  }
+
+  /* Whole card opens the bio; links sit above the overlay. */
+  .open {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .open:focus-visible {
+    outline: none;
+  }
+  .open:focus-visible::after {
+    outline: 2px solid var(--blue);
+    outline-offset: 4px;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Squad filter */
+  .squads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .squad {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 6px 16px;
+    border: 1.5px solid var(--gray);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    font: 500 var(--text-sm) var(--font);
+    color: var(--black);
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease;
+  }
+  .squad i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+  .squad span {
+    font: 500 12px / 1 var(--font-code), monospace;
+    color: var(--muted);
+  }
+  .squad:hover {
+    border-color: var(--black);
+  }
+  .squad[aria-pressed='true'] {
+    border-color: var(--black);
+    background: var(--black);
+    color: var(--white);
+  }
+  .squad[aria-pressed='true'] span {
+    color: rgb(255 255 255 / 0.7);
+  }
+  .result {
+    min-height: 22px;
+    margin: 0 0 var(--space-6);
+    font: 500 var(--text-sm) var(--font);
+    color: var(--blue);
+  }
+
+  /* Crew wall */
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+    gap: var(--space-6) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .member {
+    position: relative;
+    text-align: center;
+  }
+  .m-photo {
+    position: relative;
+    aspect-ratio: 1;
+    margin-bottom: var(--space-3);
+    border-radius: 50%;
+    background: var(--bg);
+    transition: border-radius 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .m-photo img {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+    transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* Circles become a squad shape on hover */
+  .member:hover .s-0 {
+    border-radius: 999px 999px 16px 16px;
+  }
+  .member:hover .s-1 {
+    border-radius: 32%;
+  }
+  .member:hover .s-2 {
+    border-radius: 50% 12px 50% 12px;
+  }
+  .member:hover .s-3 {
+    border-radius: 16px 50% 16px 50%;
+  }
+  .member:hover .m-photo img {
+    transform: scale(0.94);
+  }
+  .lead .m-photo {
+    box-shadow:
+      0 0 0 4px var(--white),
+      0 0 0 7px var(--c);
+  }
+  .lead-tag {
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    translate: -50% 0;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--c);
+    font: 600 12px / 18px var(--font);
+    color: var(--white);
+  }
+  .initials,
+  .d-initials {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font: 700 40px / 1 var(--font);
+    color: var(--c, var(--blue));
+  }
+  .member .open {
+    text-align: center;
+  }
+  .m-name {
+    font: 700 var(--text-body) var(--font);
+  }
+  .m-squad {
+    margin: 2px 0 0;
+    font: var(--text-caption) var(--font);
+    color: var(--muted);
+  }
+
+  /* Bio dialog */
+  .details {
+    width: min(580px, calc(100vw - 32px));
+    max-height: min(84vh, 760px);
+    padding: 0 0 var(--space-8);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--black);
+    box-shadow: 0 24px 64px rgb(30 30 30 / 0.2);
+  }
+  .details::backdrop {
+    background: rgb(30 30 30 / 0.5);
+    backdrop-filter: blur(2px);
+  }
+  .details-body > :global(*:not(.d-head)),
+  .details form {
+    margin-inline: var(--space-8);
+  }
+  .details :global(.d-head) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    background: var(--bg);
+  }
+  .details :global(.d-head img),
+  .details :global(.d-initials) {
+    flex: none;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--white);
+  }
+  .details :global(.d-head h2) {
+    margin: 0 0 var(--space-1);
+    font: 700 var(--text-h4) var(--font);
+  }
+  .details :global(.d-head p) {
+    margin: 0;
+  }
+  .details :global(.d-squads) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+  }
+  .details :global(.d-squads span) {
+    padding: 2px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    font: 500 var(--text-caption) var(--font);
+  }
+  .details :global(.d-squads .d-lead) {
+    background: var(--black);
+    color: var(--white);
+  }
+  .details :global(.d-bio) {
+    margin-top: var(--space-4);
+    color: var(--muted);
+  }
+  .details :global(.d-links) {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    font: 500 var(--text-sm) var(--font);
+    text-transform: capitalize;
+  }
+  .details form {
+    margin-top: var(--space-6);
+  }
+
+  @media (max-width: 899px) {
+    .organizers {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-6) var(--space-4);
+    }
+    .organizer h3 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+    .org-bio {
+      display: none;
+    }
+    .squads {
+      flex-wrap: nowrap;
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--gutter);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .squad {
+      flex: none;
+    }
+    .wall {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4) var(--space-3);
+    }
+    .m-name {
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .details :global(.d-head) {
+      padding: var(--space-6);
+      gap: var(--space-4);
+    }
+    .details :global(.d-head img),
+    .details :global(.d-initials) {
+      width: 72px;
+      height: 72px;
+    }
+    .details-body > :global(*:not(.d-head)),
+    .details form {
+      margin-inline: var(--space-6);
+    }
+  }
+  @media (max-width: 340px) {
+    .wall {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

@@ -1,0 +1,266 @@
+/*
+ * Design tokens from the DevFest Pune "Website style guide" (light theme only).
+ * Use these variables instead of raw values in components.
+ */
+:root {
+  /* 01 Colour palette: the 16 approved colours */
+  --gray: #f0f0f0;
+  --black: #1e1e1e;
+  --white: #ffffff;
+  --grey-1: #646464;
+
+  --blue: #4285f4;
+  --blue-halftone: #57caff;
+  --blue-pastel: #c3ecf6;
+  --green: #34a853;
+  --green-halftone: #5cdb6d;
+  --green-pastel: #ccf6c5;
+  --yellow: #f9ab00;
+  --yellow-halftone: #ffd427;
+  --yellow-pastel: #ffe7a5;
+  --red: #ea4335;
+  --red-halftone: #ff7daf;
+  --red-pastel: #f8d8d8;
+
+  /* Semantic aliases */
+  --bg: var(--white);
+  --surface: var(--gray);
+  --text: var(--black);
+  --muted: var(--grey-1);
+  --border: var(--gray);
+  --accent: var(--blue);
+
+  /* 02 Typography: Google Sans Flex, size / line-height (desktop) */
+  --font: var(--font-sans), system-ui, sans-serif;
+  --text-display: 80px / 88px;
+  --text-h2: 48px / 56px;
+  --text-h3: 32px / 40px;
+  --text-h4: 24px / 32px;
+  --text-lg: 20px / 30px;
+  --text-body: 16px / 26px;
+  --text-sm: 14px / 22px;
+  --text-caption: 12px / 18px;
+  --text-button: 14px / 20px;
+
+  /* 03 Spacing: 4px increments on an 8px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-30: 120px;
+  --section-gap: var(--space-30);
+
+  /* 04 Corner radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+  --radius: var(--radius-md);
+
+  /* 06 Layout */
+  --max-width: 1200px;
+  --gutter: 24px;
+
+  color-scheme: light;
+}
+
+/* Mobile type scale and section gap */
+@media (max-width: 600px) {
+  :root {
+    --text-display: 44px / 50px;
+    --text-h2: 32px / 40px;
+    --text-h3: 24px / 32px;
+    --text-h4: 20px / 28px;
+    --section-gap: 72px;
+    --gutter: 16px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* The hidden attribute always wins over component display rules (e.g. .button's inline-flex). */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font: var(--text-body) var(--font);
+  background: var(--bg);
+  color: var(--text);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--space-4);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Page titles use the H2 size; the hero uses .display. */
+h1 {
+  font: 700 var(--text-h2) var(--font);
+}
+h2 {
+  font: 700 var(--text-h3) var(--font);
+}
+h3 {
+  font: 600 var(--text-h4) var(--font);
+}
+
+.display {
+  font: 700 var(--text-display) var(--font);
+  letter-spacing: -0.02em;
+}
+
+.text-lg {
+  font: var(--text-lg) var(--font);
+}
+
+.text-sm {
+  font: var(--text-sm) var(--font);
+}
+
+.caption {
+  font: 500 var(--text-caption) var(--font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.container {
+  width: 100%;
+  max-width: calc(var(--max-width) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: calc(var(--section-gap) / 2);
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* 05 Buttons: primary (yellow), secondary (black), outline */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-8);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--yellow-halftone);
+  color: var(--black);
+  font: 600 var(--text-button) var(--font);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    filter 150ms ease,
+    background-color 150ms ease;
+}
+
+.button:hover {
+  filter: brightness(0.95);
+}
+
+.button--secondary {
+  background: var(--black);
+  color: var(--white);
+}
+
+.button--secondary:hover {
+  filter: none;
+  background: #000;
+}
+
+.button--outline {
+  background: var(--white);
+  border-color: var(--grey-1);
+}
+
+.button--outline:hover {
+  filter: none;
+  background: var(--gray);
+}
+
+/* 05 Track chips: pastel pill backgrounds */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--blue-pastel);
+  color: var(--black);
+  font: 600 var(--text-sm) var(--font);
+}
+
+.chip--red {
+  background: var(--red-pastel);
+}
+.chip--green {
+  background: var(--green-pastel);
+}
+.chip--yellow {
+  background: var(--yellow-pastel);
+}
+
+/* 05 UI surfaces: white card with a thin border */
+.card {
+  padding: var(--space-6);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

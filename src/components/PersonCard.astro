@@ -1,0 +1,58 @@
+---
+interface Props {
+  name: string;
+  subtitle?: string;
+  detail?: string;
+  image: string;
+  links?: { label: string; url: string }[];
+}
+
+const { name, subtitle, detail, image, links = [] } = Astro.props;
+---
+
+<article class="card">
+  <img src={image} alt={name} width="320" height="320" loading="lazy" decoding="async" />
+  <h3>{name}</h3>
+  {subtitle && <p class="text-sm subtitle">{subtitle}</p>}
+  {detail && <p class="text-sm">{detail}</p>}
+  {links.length > 0 && (
+    <p class="text-sm links">
+      {links.map((link) => (
+        <a href={link.url} rel="noopener" target="_blank">
+          {link.label}
+        </a>
+      ))}
+    </p>
+  )}
+</article>
+
+<style>
+  .card {
+    padding: var(--space-4);
+  }
+  /* Style guide 05 Speakers: consistent image ratio. */
+  img {
+    width: 100%;
+    aspect-ratio: 1;
+    margin-bottom: var(--space-4);
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: var(--gray);
+  }
+  h3 {
+    font-size: 18px;
+    line-height: 26px;
+    margin-bottom: var(--space-1);
+  }
+  p {
+    margin: 0 0 var(--space-2);
+  }
+  .subtitle {
+    color: var(--muted);
+  }
+  .links {
+    display: flex;
+    gap: var(--space-3);
+    text-transform: capitalize;
+  }
+</style>

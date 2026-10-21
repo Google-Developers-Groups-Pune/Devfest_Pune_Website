@@ -1,0 +1,239 @@
+[
+  {
+    "id": "1002",
+    "name": "Gaurav Golecha",
+    "company": {
+      "name": "Anchoring"
+    },
+    "community_title": "Product Executive",
+    "image": "GauravGolecha.jpg",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/gaurav-golecha-gg-346b5219a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1003",
+    "name": "Kalyani Desai",
+    "company": {
+      "name": "Content"
+    },
+    "community_title": "Technical Writer at Red Hat",
+    "image": "KalyaniDesai.jpg",
+    "bio": "I am a Technical Writer at Red Hat with aspirations to grow into a content strategist. Currently, I am serving as the Content Lead for DevFest Pune 2024, where I channel my passion for crafting compelling and impactful narratives. Beyond my professional role, I love writing about intriguing topics, creating blogs that inspire and inform. I am also a huge space science enthusiast, blending my love for storytelling with the wonders of the cosmos through engaging content.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/kalyani-desai-2188a98a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1001",
+    "name": "Krishnan Raghavan",
+    "company": {
+      "name": "Development"
+    },
+    "community_title": "Independent Software Consultant",
+    "image": "KrishnanRaghvan.jpg",
+    "bio": "I am IT professional with over 20 years of experience. I consider my self to be a lifelong student and love learning and keeping myself updated in my areas of interest. Contributing to community and open source helps me give to the community and also meet and network with new people and learn from them. I work mostly with back-end technologies like Python, C++ and Go.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/krishnan-raghavan"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1006",
+    "name": "Nidhish Malav",
+    "company": {
+      "name": "Photography"
+    },
+    "community_title": "DevOps Enthusiast",
+    "image": "NidhishMalav.jpg",
+    "bio": "I am the lead of photography team, i contributed as creating some video content for the social media handles. Shooting BTS videos and capture the moments on the zero day. \nMy skills are shooting videos and photos and editing. \nI chose to volunteer at DevFest because it is a great opportunity for me to work for a community and build my connections and enhance my skills. \nThis community contribution of mine will look great at my resume. ",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/nidhishmalav?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1004",
+    "name": "Om Deshmukh",
+    "company": {
+      "name": "Photography/ Videography"
+    },
+    "community_title": "DevOps Engineer",
+    "image": "OmDeshmukh.jpg",
+    "bio": "I am IT professional with over 20 years of experience. I consider my self to be a lifelong student and love learning and keeping myself updated in my areas of interest. Contributing to community and open source helps me give to the community and also meet and network with new people and learn from them. I work mostly with back-end technologies like Python, C++ and Go.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/omdeshmukh9"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1007",
+    "name": "Paritosh Vaidya",
+    "company": {
+      "name": "Social Media"
+    },
+    "community_title": "Engineering Manager - Mobile & Cloud",
+    "image": "ParitoshVaidya.jpg",
+    "bio": "I am IT professional with over 20 years of experience. I consider my self to be a lifelong student and love learning and keeping myself updated in my areas of interest. Contributing to community and open source helps me give to the community and also meet and network with new people and learn from them. I work mostly with back-end technologies like Python, C++ and Go.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/paritoshvaidya/"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1008",
+    "name": "Rohit Prakash Gawade",
+    "company": {
+      "name": "Design"
+    },
+    "community_title": "UI UX Designer & Cybersecurity Analyst",
+    "image": "RohitGawade.jpg",
+    "bio": "Rohit Prakash Gawade is a passionate technologist specializing in graphic design and cyber security, with extensive experience in community contributions. He has actively participated in several renowned tech communities, including Google Developer Groups Pune, Flutter Pune, Foss United Pune, AWS Pune, and Ubucon Asia\u201924, where he created impactful event materials and managed large-scale events. Rohit has worked on innovative projects like a CNC Plotter for PCB Design, a Network Jamming Device, and Virtual Environment Integration in Arch Linux. With a strong foundation in networking, desktop engineering, and digital forensics, combined with professional experience as a System Admin, UI/UX Designer, and Team Lead, Rohit blends technical expertise with creativity to drive solutions.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/rohit-gawade-562a1b1ab/"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1005",
+    "name": "Shreya Dhurde",
+    "company": {
+      "name": "Anchoring"
+    },
+    "community_title": "Software Engineer",
+    "image": "ShreyaDhurde.jpg",
+    "bio": "I am IT professional with over 20 years of experience. I consider my self to be a lifelong student and love learning and keeping myself updated in my areas of interest. Contributing to community and open source helps me give to the community and also meet and network with new people and learn from them. I work mostly with back-end technologies like Python, C++ and Go.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/shreya-dhurde"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1012",
+    "name": "Shreya Kerur",
+    "company": {
+      "name": "Sponsorship, Company Onboarding and Collaboration"
+    },
+    "community_title": "Cybersecurity Engineer",
+    "image": "ShreyaKerur.jpg",
+    "bio": "With a keen interest in data science and information security, I thrive in collaborative environments and enjoy engaging with diverse perspectives. I have been associated with GDG & WTM Pune since 2023. I have contributed as the Anchoring Lead IWD '23 and Onboarding Team for DevFest '23 where I coordinated in onboarding GeeksforGeeks, which benefited the community. I am passionate about exploring new technologies with my goal to apply my technical expertise and management skills to drive innovation and create meaningful impact in society.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "www.linkedin.com/in/shreyakerur"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1013",
+    "name": "Shubham Rane",
+    "company": {
+      "name": "Content"
+    },
+    "community_title": "Advanced App Engineering Analyst at Accenture",
+    "image": "ShubhamRane.jpg",
+    "bio": "Shubham is working as Advanced Application Engineering Analyst at Accenture Solutions Private Ltd. His work aligns closely with Data Engineering principles, enabling him to build and manage efficient and scalable data pipelines. He possesses a strong skillset in Python, SQL, Azure Data Factory, Microsoft Power BI, and Machine Learning, allowing him to tackle complex data challenges. Committed to professional development, he is currently pursuing an MTech in Data Science and Engineering from the prestigious BITS Pilani and actively volunteers as a Content Team Lead with GDG Pune for over 2 years. His dedication to the field is reflected in his membership of the International Association of Engineers (IAENG).",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/shubhamrane1605/"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1009",
+    "name": "Siddhi Khaire",
+    "company": {
+      "name": "Startups/Company Collaboration, Sponsorship"
+    },
+    "community_title": "Cloud operations and Analyst",
+    "image": "SiddhiKhaire.jpg",
+    "bio": "I am IT professional with over 20 years of experience. I consider my self to be a lifelong student and love learning and keeping myself updated in my areas of interest. Contributing to community and open source helps me give to the community and also meet and network with new people and learn from them. I work mostly with back-end technologies like Python, C++ and Go.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/krishnan-raghavan"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1010",
+    "name": "Sneha Arvind Ojha",
+    "company": {
+      "name": "Social Media"
+    },
+    "community_title": "Future Optimized E-Designer",
+    "image": "SnehaOjha.jpg",
+    "bio": "I am IT professional with over 20 years of experience. I consider my self to be a lifelong student and love learning and keeping myself updated in my areas of interest. Contributing to community and open source helps me give to the community and also meet and network with new people and learn from them. I work mostly with back-end technologies like Python, C++ and Go.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/sneha-ojha-"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1040",
+    "name": "Vishal Dhanwade",
+    "company": {
+      "name": "Design"
+    },
+    "community_title": "Sr. Product Designer",
+    "image": "VishalDhanwade.jpg",
+    "bio": "I have contributed in deployment process of website and also helped in job portal app regarding docker and deployment, I have interest in cloud computing and ai in which I want to learn and improve myself everyday and help others also, for the skills I right now I have improved myself in cloud and improving myself in ai so that I can add that also in my skill set.\n\nI learned so much from the community and very grateful for that, i wanted to say thank you for whatever they have given me just like i contributed for the devfest 2022, and this year also I got chance to do so, and would love to do in the future also by upskilling myself more and helping more than this time. ",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/vishal-dhanwade/"
+      }
+    ],
+    "type": "Volunteer"
+  },
+  {
+    "id": "1011",
+    "name": "Yash Thakur",
+    "company": {
+      "name": "Development"
+    },
+    "community_title": "DevOps Engineer at Best Network Systems",
+    "image": "YashThakur.jpg",
+    "bio": "I have contributed in deployment process of website and also helped in job portal app regarding docker and deployment, I have interest in cloud computing and ai in which I want to learn and improve myself everyday and help others also, for the skills I right now I have improved myself in cloud and improving myself in ai so that I can add that also in my skill set.\n\nI learned so much from the community and very grateful for that, i wanted to say thank you for whatever they have given me just like i contributed for the devfest 2022, and this year also I got chance to do so, and would love to do in the future also by upskilling myself more and helping more than this time. ",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/yashthakur666"
+      }
+    ],
+    "type": "Volunteer"
+  }
+]

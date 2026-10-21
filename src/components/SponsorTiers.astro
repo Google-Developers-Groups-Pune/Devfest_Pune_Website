@@ -1,0 +1,63 @@
+---
+import { sponsorsData } from '../data';
+
+interface Props {
+  /** Show only the first N tiers (title, gold, silver...). Shows all when omitted. */
+  limit?: number;
+}
+
+const { limit } = Astro.props;
+const tiers = sponsorsData.currentSponsors.slice(0, limit);
+---
+
+{tiers.map((tier) => (
+  <section class="tier">
+    <h3>{tier.category}</h3>
+    <ul style={`--tier: ${tier.color}`}>
+      {tier.sponsors.map((sponsor) => (
+        <li>
+          <a href={sponsor.link} rel="noopener" target="_blank" title={sponsor.name}>
+            <img
+              src={`/img/sponsors/${sponsor.logo}`}
+              alt={sponsor.name}
+              loading="lazy"
+              decoding="async"
+            />
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+))}
+
+<style>
+  .tier {
+    margin-bottom: var(--space-8);
+  }
+  h3 {
+    font: 600 var(--text-lg) var(--font);
+  }
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(180px, 40vw), 1fr));
+    gap: var(--space-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    display: grid;
+    place-items: center;
+    height: clamp(80px, 22vw, 112px);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    border: 1.5px solid var(--tier, var(--border));
+  }
+  img {
+    max-height: min(72px, 60%);
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+  }
+</style>

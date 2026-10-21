@@ -1,0 +1,876 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mainData, partnersData, sponsorsData } from '../data';
+
+type Logo = { name: string; link: string; src: string };
+const sponsorLogo = (s: { name: string; logo: string; link: string }): Logo => ({
+  name: s.name,
+  link: s.link,
+  src: `/img/sponsors/${s.logo}`,
+});
+
+const tierOf = (name: string) =>
+  sponsorsData.currentSponsors.find((t) => t.category.toLowerCase().startsWith(name));
+const title = tierOf('title')?.sponsors.map(sponsorLogo) ?? [];
+const gold = tierOf('gold')?.sponsors.map(sponsorLogo) ?? [];
+const silver = tierOf('silver')?.sponsors.map(sponsorLogo) ?? [];
+const booth = tierOf('booth')?.sponsors.map(sponsorLogo) ?? [];
+
+// Every other tier is a single-role partner: "Podcast Partner" -> "Podcast".
+const named = new Set(['title', 'gold', 'silver', 'booth']);
+const roles = sponsorsData.currentSponsors
+  .filter((t) => !named.has(t.category.split(' ')[0].toLowerCase()))
+  .flatMap((t) =>
+    t.sponsors.map((s) => ({ ...sponsorLogo(s), role: t.category.replace(/\s*partners?$/i, '') })),
+  );
+
+const community: Logo[] = partnersData.partners.map((p) => ({
+  name: p.name.trim(),
+  link: p.url,
+  src: `/img/partners/${p.logo}`,
+}));
+const previous = sponsorsData.previousSponsors.map(sponsorLogo);
+
+const pastels = ['blue', 'red', 'yellow', 'green'];
+const sponsorCount = title.length + gold.length + silver.length;
+const partnerCount = booth.length + roles.length;
+const { communityLinks, eventInfo } = mainData;
+const mail = `${communityLinks.email}?subject=${encodeURIComponent(`Sponsoring ${eventInfo.name}`)}`;
+---
+
+<BaseLayout
+  title="Sponsors"
+  description={`The sponsors, partners and communities that make ${eventInfo.name} possible.`}
+>
+  <div class="sp-page">
+    <header class="container hero">
+      <div class="hero-copy">
+        <p class="kicker">Sponsors &amp; partners</p>
+        <h1>
+          Thank you for making DevFest Pune <span class="hl">possible.</span>
+        </h1>
+        <ul class="tally">
+          <li style="--bg: var(--blue-pastel)"><strong>{sponsorCount}</strong> sponsors</li>
+          <li style="--bg: var(--yellow-pastel)"><strong>{partnerCount}</strong> partners</li>
+          <li style="--bg: var(--green-pastel)">
+            <strong>{community.length}</strong> community partners
+          </li>
+        </ul>
+        <div class="hero-actions">
+          <a class="button" href={mail}>Sponsor DevFest Pune</a>
+          <a class="button button--outline" href="#previous">Previous sponsors</a>
+        </div>
+      </div>
+      <!-- Headline sponsors on tilted plates that drift with the pointer -->
+      <div class="plates" aria-hidden="true">
+        {[...title, ...gold, ...silver].map((s, i) => (
+          <span class:list={['plate', `p-${i}`]} data-depth={(i % 3) + 1}>
+            <img src={s.src} alt="" />
+          </span>
+        ))}
+      </div>
+    </header>
+
+    {title.length > 0 && (
+      <section class="container block" aria-labelledby="title-heading">
+        <h2 id="title-heading" class="label">Title sponsor</h2>
+        {title.map((s) => (
+          <a class="stage" href={s.link} rel="noopener" target="_blank">
+            <img src={s.src} alt={s.name} />
+          </a>
+        ))}
+      </section>
+    )}
+
+    <section class="container block" aria-labelledby="tiers-heading">
+      <h2 id="tiers-heading" class="sr-only">Gold and silver sponsors</h2>
+      <div class="tiers">
+        {[
+          { label: 'Gold', items: gold, cls: 'gold' },
+          { label: 'Silver', items: silver, cls: 'silver' },
+        ].map((tier) =>
+          tier.items.map((s) => (
+            <a class:list={['tier-card', tier.cls]} href={s.link} rel="noopener" target="_blank" data-tilt>
+              <span class="tier-tag">{tier.label}</span>
+              <span class="logo-plate">
+                <img src={s.src} alt={s.name} loading="lazy" />
+              </span>
+              <span class="tier-name">{s.name}</span>
+            </a>
+          )),
+        )}
+      </div>
+    </section>
+
+    <section class="container block" aria-labelledby="partners-heading">
+      <div class="block-head">
+        <h2 id="partners-heading">Partners</h2>
+        <p>The booths, the photos, the swag, the tickets. Each one handled by a partner.</p>
+      </div>
+      <div class="roles">
+        {roles.map((p, i) => (
+          <a
+            class="role"
+            href={p.link}
+            rel="noopener"
+            target="_blank"
+            style={`--bg: var(--${pastels[i % 4]}-pastel); --c: var(--${pastels[i % 4]})`}
+          >
+            <span class="role-name">{p.role}</span>
+            <span class="logo-plate">
+              <img src={p.src} alt={p.name} loading="lazy" />
+            </span>
+          </a>
+        ))}
+      </div>
+      {booth.length > 0 && (
+        <>
+          <h3 class="label sub">Booth partners</h3>
+          <ul class="booths">
+            {booth.map((s) => (
+              <li>
+                <a href={s.link} rel="noopener" target="_blank" title={s.name}>
+                  <img src={s.src} alt={s.name} loading="lazy" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+
+    <section class="container block" aria-labelledby="community-heading">
+      <div class="block-head">
+        <h2 id="community-heading">Community partners</h2>
+        <p>Pune's developer communities, spreading the word and showing up together.</p>
+      </div>
+      <ul class="communities">
+        {community.map((c, i) => (
+          <li style={`--c: var(--${pastels[i % 4]})`}>
+            <a href={c.link} rel="noopener" target="_blank">
+              <span class="badge-logo">
+                <img src={c.src} alt="" loading="lazy" />
+              </span>
+              <span class="badge-name">{c.name}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="block" id="previous" aria-labelledby="previous-heading">
+      <div class="container block-head">
+        <h2 id="previous-heading">Previous sponsors</h2>
+        <p>Companies that backed earlier editions of DevFest Pune.</p>
+      </div>
+      <div class="belt">
+        <ul class="belt-track">
+          {[0, 1].map((copy) =>
+            previous.map((s) => (
+              <li aria-hidden={copy ? 'true' : undefined}>
+                <a href={s.link} rel="noopener" target="_blank" tabindex={copy ? -1 : undefined}>
+                  <img src={s.src} alt={s.name} loading="lazy" />
+                </a>
+              </li>
+            )),
+          )}
+        </ul>
+      </div>
+    </section>
+
+    <section class="container block">
+      <div class="cta">
+        <div>
+          <h2>Want to support {eventInfo.name}?</h2>
+          <p>Get in touch with the GDG Pune team about sponsoring or partnering.</p>
+        </div>
+        <a class="button cta-button" href={mail}>
+          {communityLinks.email.replace(/^mailto:/, '')}
+        </a>
+        <span class="cta-shape s1" aria-hidden="true"></span>
+        <span class="cta-shape s2" aria-hidden="true"></span>
+        <span class="cta-shape s3" aria-hidden="true"></span>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  // Spotlight on the title sponsor follows the pointer (CSS reads --mx/--my).
+  document.querySelectorAll<HTMLElement>('.stage').forEach((stage) =>
+    stage.addEventListener('pointermove', (e) => {
+      const r = stage.getBoundingClientRect();
+      stage.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      stage.style.setProperty('--my', `${e.clientY - r.top}px`);
+    }),
+  );
+
+  if (motion) {
+    gsap
+      .timeline({ defaults: { ease: 'expo.out' } })
+      .from('.hero .kicker', { y: 20, opacity: 0, duration: 0.8 })
+      .from('.hero h1', { y: 60, opacity: 0, duration: 1.1 }, 0.05)
+      .from('.hero .hl', { backgroundSize: '0% 32%', duration: 1.2, ease: 'power3.inOut' }, 0.6)
+      .from('.tally li, .hero-actions', { y: 30, opacity: 0, duration: 0.8, stagger: 0.07 }, 0.3)
+      .from(
+        '.plate',
+        {
+          y: 120,
+          scale: 0.6,
+          opacity: 0,
+          rotate: () => gsap.utils.random(-30, 30),
+          duration: 1.3,
+          stagger: 0.08,
+          ease: 'back.out(1.4)',
+        },
+        0.2,
+      );
+
+    // Plates float, and lean away from the pointer by their depth.
+    gsap.utils.toArray<HTMLElement>('.plate').forEach((plate, i) => {
+      gsap.to(plate, {
+        y: '+=14',
+        duration: 2.4 + i * 0.3,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        delay: 1.4,
+      });
+    });
+    if (fine) {
+      const plates = gsap.utils.toArray<HTMLElement>('.plate');
+      const movers = plates.map((p) => ({
+        depth: Number(p.dataset.depth),
+        x: gsap.quickTo(p, 'x', { duration: 0.8, ease: 'power3' }),
+      }));
+      document.querySelector('.hero')!.addEventListener('pointermove', (e) => {
+        const dx = (e as PointerEvent).clientX / window.innerWidth - 0.5;
+        movers.forEach((m) => m.x(dx * -24 * m.depth));
+      });
+    }
+
+    gsap.from('.stage', {
+      clipPath: 'inset(12% 8% 12% 8% round 48px)',
+      duration: 1.2,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: '.stage', start: 'top 85%' },
+    });
+    gsap.from('.stage img', {
+      scale: 0.7,
+      opacity: 0,
+      duration: 1.2,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: '.stage', start: 'top 80%' },
+    });
+    gsap.utils.toArray<HTMLElement>('.block-head, .label').forEach((head) =>
+      gsap.from(head.children.length ? head.children : head, {
+        y: 40,
+        opacity: 0,
+        duration: 0.9,
+        stagger: 0.08,
+        ease: 'expo.out',
+        scrollTrigger: { trigger: head, start: 'top 88%' },
+      }),
+    );
+    const pop = (selector: string, from: gsap.TweenVars) =>
+      ScrollTrigger.batch(selector, {
+        start: 'top 90%',
+        once: true,
+        onEnter: (els) =>
+          gsap.from(els, { ...from, opacity: 0, duration: 0.9, stagger: 0.07, ease: 'expo.out' }),
+      });
+    pop('.tier-card', { y: 80 });
+    pop('.role', { y: 60, rotate: () => gsap.utils.random(-6, 6) });
+    pop('.booths li', { y: 40, scale: 0.9 });
+    pop('.communities li', { scale: 0.4, ease: 'back.out(2)' });
+    gsap.from('.cta', {
+      y: 60,
+      opacity: 0,
+      duration: 1,
+      ease: 'expo.out',
+      scrollTrigger: { trigger: '.cta', start: 'top 88%' },
+    });
+    gsap.to('.cta-shape', {
+      rotate: (i) => (i % 2 ? -180 : 180),
+      ease: 'none',
+      scrollTrigger: { trigger: '.cta', start: 'top bottom', end: 'bottom top', scrub: true },
+    });
+
+    // Gold and silver cards tilt toward the pointer.
+    if (fine) {
+      document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
+        card.addEventListener('pointermove', (e) => {
+          const r = card.getBoundingClientRect();
+          gsap.to(card, {
+            rotateY: ((e.clientX - r.left) / r.width - 0.5) * 10,
+            rotateX: ((e.clientY - r.top) / r.height - 0.5) * -10,
+            duration: 0.5,
+            ease: 'power3.out',
+            transformPerspective: 900,
+          });
+        });
+        card.addEventListener('pointerleave', () =>
+          gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)' }),
+        );
+      });
+    }
+  }
+</script>
+
+<style>
+  .sp-page {
+    padding-block: var(--space-16) var(--space-20);
+    overflow-x: clip;
+  }
+  .kicker,
+  .label {
+    margin: 0 0 var(--space-4);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Hero */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    gap: var(--space-12);
+  }
+  h1 {
+    margin: 0 0 var(--space-8);
+    font: 700 clamp(44px, 6.4vw, 96px) / 1 var(--font);
+    letter-spacing: -0.04em;
+  }
+  .hl {
+    padding-inline: 0.06em;
+    background: linear-gradient(var(--blue-pastel), var(--blue-pastel)) 0 88% / 100% 32% no-repeat;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-8);
+    padding: 0;
+    list-style: none;
+  }
+  .tally li {
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+  }
+  .tally strong {
+    font-weight: 700;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .plates {
+    position: relative;
+    aspect-ratio: 1;
+  }
+  .plate {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 46%;
+    aspect-ratio: 16 / 10;
+    padding: 6%;
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow:
+      0 1px 0 rgb(30 30 30 / 0.04),
+      0 18px 40px rgb(30 30 30 / 0.12);
+  }
+  .plate img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  .p-0 {
+    top: 6%;
+    left: 22%;
+    width: 60%;
+    rotate: -4deg;
+    z-index: 2;
+  }
+  .p-1 {
+    top: 42%;
+    left: 0;
+    rotate: 6deg;
+    background: var(--yellow-pastel);
+  }
+  .p-2 {
+    top: 38%;
+    right: 0;
+    rotate: -7deg;
+    background: var(--yellow-pastel);
+  }
+  .p-3 {
+    bottom: 2%;
+    left: 12%;
+    width: 38%;
+    rotate: -3deg;
+  }
+  .p-4 {
+    bottom: 6%;
+    right: 6%;
+    width: 38%;
+    rotate: 5deg;
+  }
+
+  .block {
+    padding-top: var(--space-24);
+  }
+  .block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+  .block-head h2 {
+    margin: 0;
+    font: 700 var(--text-h2) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .block-head p {
+    max-width: 46ch;
+    margin: 0;
+    color: var(--muted);
+  }
+
+  /* Title sponsor: a stage with a turning Google-colour ring and a pointer spotlight */
+  @property --turn {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: var(--space-4);
+    min-height: clamp(260px, 34vw, 420px);
+    padding: var(--space-12);
+    border: 3px solid transparent;
+    border-radius: 40px;
+    background:
+      radial-gradient(
+          420px circle at var(--mx, 50%) var(--my, 50%),
+          rgb(66 133 244 / 0.12),
+          transparent 70%
+        )
+        padding-box,
+      linear-gradient(var(--white), var(--white)) padding-box,
+      conic-gradient(
+          from var(--turn),
+          var(--blue),
+          var(--red),
+          var(--yellow),
+          var(--green),
+          var(--blue)
+        )
+        border-box;
+    text-decoration: none;
+    color: var(--black);
+    animation: turn 8s linear infinite;
+  }
+  @keyframes turn {
+    to {
+      --turn: 360deg;
+    }
+  }
+  .stage img {
+    width: min(560px, 80%);
+    height: auto;
+  }
+
+  /* Gold and silver */
+  .tiers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gutter);
+  }
+  .tier-card {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border-radius: 32px;
+    text-decoration: none;
+    color: var(--black);
+    will-change: transform;
+  }
+  .gold {
+    min-height: 320px;
+    background: var(--yellow-pastel);
+  }
+  .silver {
+    min-height: 240px;
+    background: var(--gray);
+  }
+  .tier-tag {
+    justify-self: start;
+    padding: 4px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    font: 600 var(--text-caption) var(--font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .gold .tier-tag {
+    background: var(--yellow);
+    color: var(--black);
+  }
+  .logo-plate {
+    display: grid;
+    place-items: center;
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+  }
+  .logo-plate img {
+    max-width: 100%;
+    max-height: 96px;
+    width: auto;
+    object-fit: contain;
+  }
+  .silver .logo-plate img {
+    max-height: 72px;
+  }
+  .tier-name {
+    font: 600 var(--text-body) var(--font);
+  }
+
+  /* Single-role partners */
+  .roles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-4);
+  }
+  .role {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+    text-decoration: none;
+    color: var(--black);
+    /* translate, not transform: GSAP owns transform for the entrance */
+    transition:
+      translate 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-radius 400ms ease;
+  }
+  .role:hover {
+    translate: 0 -6px;
+    border-radius: 40px var(--radius-lg) 40px var(--radius-lg);
+  }
+  .role-name {
+    padding-inline: var(--space-2);
+    font: 700 var(--text-h4) var(--font);
+    letter-spacing: -0.02em;
+  }
+  .role-name::after {
+    content: ' partner';
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 0.7em;
+  }
+  .role .logo-plate {
+    height: 120px;
+    padding: var(--space-4);
+  }
+  .role .logo-plate img {
+    max-height: 72px;
+  }
+  .sub {
+    margin-top: var(--space-12);
+  }
+  .booths {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .booths a {
+    display: grid;
+    place-items: center;
+    height: 100px;
+    padding: var(--space-4);
+    border: 1.5px solid var(--gray);
+    border-radius: var(--radius-md);
+    transition:
+      border-color 250ms ease,
+      transform 300ms ease;
+  }
+  .booths a:hover {
+    border-color: var(--black);
+    transform: translateY(-3px);
+  }
+  .booths img {
+    max-height: 56px;
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* Community badges */
+  .communities {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-8) var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .communities li {
+    width: 132px;
+  }
+  .communities a {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    text-align: center;
+    text-decoration: none;
+    color: var(--black);
+  }
+  .badge-logo {
+    display: grid;
+    place-items: center;
+    width: 112px;
+    aspect-ratio: 1;
+    padding: 18px;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow:
+      0 0 0 2px var(--gray),
+      0 0 0 0 var(--c);
+    transition:
+      box-shadow 300ms ease,
+      transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .communities a:hover .badge-logo {
+    box-shadow:
+      0 0 0 2px var(--white),
+      0 0 0 5px var(--c);
+    transform: rotate(-8deg) scale(1.06);
+  }
+  .badge-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .badge-name {
+    font: 500 var(--text-sm) var(--font);
+  }
+
+  /* Previous sponsors belt */
+  .belt {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+  .belt-track {
+    display: flex;
+    gap: var(--space-4);
+    width: max-content;
+    margin: 0;
+    padding: var(--space-2) 0;
+    list-style: none;
+    animation: belt 40s linear infinite;
+  }
+  .belt:hover .belt-track {
+    animation-play-state: paused;
+  }
+  @keyframes belt {
+    to {
+      transform: translateX(calc(-50% - var(--space-2)));
+    }
+  }
+  .belt a {
+    display: grid;
+    place-items: center;
+    width: 200px;
+    height: 100px;
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-md);
+    background: var(--gray);
+  }
+  .belt img {
+    max-height: 56px;
+    max-width: 100%;
+    width: auto;
+    object-fit: contain;
+    filter: grayscale(1);
+    opacity: 0.75;
+    mix-blend-mode: multiply;
+    transition:
+      filter 300ms ease,
+      opacity 300ms ease;
+  }
+  .belt a:hover img {
+    filter: none;
+    opacity: 1;
+  }
+
+  /* Call to action */
+  .cta {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-16) var(--space-12);
+    overflow: hidden;
+    border-radius: 40px;
+    background: var(--blue);
+    color: var(--white);
+  }
+  .cta > div {
+    position: relative;
+    z-index: 1;
+    max-width: 620px;
+  }
+  .cta h2 {
+    margin: 0 0 var(--space-3);
+    font: 700 var(--text-h2) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .cta p {
+    margin: 0;
+    font: var(--text-lg) var(--font);
+    opacity: 0.9;
+  }
+  .cta-button {
+    position: relative;
+    z-index: 1;
+    background: var(--white);
+    color: var(--black);
+  }
+  .cta-shape {
+    position: absolute;
+    pointer-events: none;
+  }
+  .s1 {
+    top: -60px;
+    right: 22%;
+    width: 160px;
+    height: 160px;
+    border-radius: 50% 12px 50% 12px;
+    background: var(--yellow);
+  }
+  .s2 {
+    bottom: -70px;
+    right: -30px;
+    width: 200px;
+    height: 200px;
+    border-radius: 32%;
+    background: var(--green);
+  }
+  .s3 {
+    bottom: -40px;
+    left: 40%;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  @media (max-width: 899px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-8);
+    }
+    .plates {
+      order: -1;
+      width: min(100%, 420px);
+      aspect-ratio: 5 / 4;
+      margin-inline: auto;
+    }
+    .block {
+      padding-top: var(--space-16);
+    }
+    .tiers {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .gold,
+    .silver {
+      min-height: 0;
+    }
+    .stage {
+      padding: var(--space-8) var(--space-6);
+      border-radius: 28px;
+    }
+    .roles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+    .role-name {
+      font-size: 18px;
+      line-height: 24px;
+    }
+    .role .logo-plate {
+      height: 96px;
+    }
+    .booths {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .communities {
+      gap: var(--space-6) var(--space-3);
+    }
+    .communities li {
+      width: calc(33% - var(--space-3));
+    }
+    .badge-logo {
+      width: 88px;
+      padding: 14px;
+    }
+    .belt a {
+      width: 150px;
+      height: 80px;
+    }
+    .cta {
+      padding: var(--space-12) var(--space-6) var(--space-16);
+      border-radius: 28px;
+    }
+    /* Smaller shapes tucked into the corners so the white text stays readable */
+    .s1 {
+      top: -40px;
+      right: -30px;
+      width: 96px;
+      height: 96px;
+    }
+    .s2 {
+      right: -50px;
+      bottom: -60px;
+      width: 120px;
+      height: 120px;
+    }
+    .s3 {
+      left: -20px;
+      bottom: -30px;
+      width: 60px;
+      height: 60px;
+    }
+  }
+</style>

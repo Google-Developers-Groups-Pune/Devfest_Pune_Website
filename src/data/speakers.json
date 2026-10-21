@@ -1,0 +1,104 @@
+[
+  {
+    "id": "1",
+    "name": "Vishal Virani",
+    "company": {
+      "name": "Rocket.New",
+      "designation": "CEO & Founder"
+    },
+    "community_title": "Stop Building AI Apps. Start Building AI Businesses.",
+    "image": "VishalVirani.jpeg",
+    "bio": "",
+    "social": {
+      "linkedin": "",
+      "twitter": "",
+      "github": "",
+      "web": ""
+    }
+  },
+  {
+    "id": "2",
+    "name": "Harsh Dattani",
+    "company": {
+      "name": "Google",
+      "designation": "Regional Lead - Developer Community Programs India"
+    },
+    "community_title": "",
+    "image": "HarshDattani.jpg",
+    "bio": "",
+    "social": {
+      "linkedin": "",
+      "twitter": "",
+      "github": "",
+      "web": ""
+    }
+  },
+  {
+    "id": "3",
+    "name": "Rupesh Kumar",
+    "company": {
+      "name": "One Card",
+      "designation": "Chief Technical Officer"
+    },
+    "community_title": "Panel Discussion Track 3: The Founder's Journey: Scaling, Strategy, and Building Pune's Startup Ecosystem",
+    "image": "RupeshKumar.jpg",
+    "bio": "",
+    "social": {
+      "linkedin": "",
+      "twitter": "",
+      "github": "",
+      "web": ""
+    }
+  },
+  {
+    "id": "4",
+    "name": "Gaurav Tripathi",
+    "company": {
+      "name": "Partex.AI",
+      "designation": "Co-founder & CTO"
+    },
+    "community_title": "Panel Discussion Track 3: The Founder's Journey: Scaling, Strategy, and Building Pune's Startup Ecosystem",
+    "image": "GauravTripathi.jpg",
+    "bio": "",
+    "social": {
+      "linkedin": "",
+      "twitter": "",
+      "github": "",
+      "web": ""
+    }
+  },
+  {
+    "id": "5",
+    "name": "Neha Mathur",
+    "company": {
+      "name": "HyrGPT",
+      "designation": "Co-Founder and Director"
+    },
+    "community_title": "Panel Discussion Track 3: The Founder's Journey: Scaling, Strategy, and Building Pune's Startup Ecosystem",
+    "image": "NehaMathur.jpg",
+    "bio": "",
+    "social": {
+      "linkedin": "",
+      "twitter": "",
+      "github": "",
+      "web": ""
+    }
+  },
+  {
+    "id": "6",
+    "name": "Mahaveer Muttha",
+    "company": {
+      "name": "Birdvision",
+      "designation": "Co Founder"
+    },
+    "community_title": "Panel Discussion Track 3: The Founder's Journey: Scaling, Strategy, and Building Pune's Startup Ecosystem",
+    "image": "MahaveerMuttha.jpg",
+    "bio": "",
+    "social": {
+      "linkedin": "",
+      "twitter": "",
+      "github": "",
+      "web": ""
+    }
+  }
+]

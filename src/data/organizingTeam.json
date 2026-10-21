@@ -1,0 +1,89 @@
+[
+  {
+    "id": "6001",
+    "name": "Mahaveer Muttha",
+    "company": {
+      "name": "GDG Pune Organizer",
+      "designation": ""
+    },
+    "community_title": "",
+    "image": "mahaveer.jpg",
+    "bio": "Mahaveer Mutha is an Organizer for Google Developer Group Pune, where he plays a pivotal role in building a vibrant tech community. As a serial entrepreneur, investor at JITO JIIF, and startup mentor, Mahaveer is dedicated to fostering innovation and growth. He is a seasoned expert in B2B-B2C SaaS, WhatsApp Business API, and tech commercialization, regularly sharing his insights as a speaker in the tech and startup ecosystems.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/mahaveer-muttha-64451832"
+      },
+      {
+        "linkType": "twitter",
+        "url": "https://twitter.com/mahaveermuttha"
+      }
+    ],
+    "type": "Organizer"
+  },
+  {
+    "id": "6002",
+    "name": "Swapnil Jathar",
+    "company": {
+      "name": "GDG Pune Organizer",
+      "designation": "Community Organizer - "
+    },
+    "community_title": "",
+    "image": "Swapnil.jpg",
+    "bio": "Swapnil Jathar is a Community Organizer for Google Developer Group Pune, where he actively fosters collaboration and knowledge-sharing among developers. With expertise in product strategy for B2B and B2C, he is a Certified Scrum Product Owner® (CSPO®) and Google Cloud Certified Associate Cloud Engineer. Swapnil is passionate about driving innovation in SaaS products and building a strong tech community through events, workshops, and mentorship.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/swapniljathar/"
+      },
+      {
+        "linkType": "twitter",
+        "url": "https://x.com/swapniljathar"
+      }
+    ],
+    "type": "Organizer"
+  },
+  {
+    "id": "6002",
+    "name": "Pranoti Nandurkar",
+    "company": {
+      "name": "WTM Ambassador",
+      "designation": ""
+    },
+    "community_title": "",
+    "image": "pranoti.jpg",
+    "bio": "Pranoti Nandurkar is an Organizer for Google Developer Group Pune, where she actively contributes to building and empowering the local developer community. As a Women Techmakers Ambassador, she champions diversity and inclusion in tech, creating opportunities for women to excel. Pranoti's passion for community building and technology drives her efforts to foster learning, collaboration, and innovation within the GDG Pune ecosystem.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/pranoti-nandurkar-170021b/"
+      },
+      {
+        "linkType": "twitter",
+        "url": "https://x.com/pranotinandurka"
+      }
+    ],
+    "type": "Organizer"
+  },
+  {
+    "id": "6002",
+    "name": "Namrata More",
+    "company": {
+      "name": "WTM Ambassador"
+    },
+    "community_title": "",
+    "image": "namrata.webp",
+    "bio": "Namrata More is a Google Developer Expert in Payments with a deep expertise in the FinTech space. Currently working at Razorpay, she is recognized as a Top Voice in the Payment Industry, where she merges her passion for technology, UX, and mathematics to shape the future of digital payments. As an international speaker and mentor, Namrata is dedicated to sharing her knowledge with the global developer community, making significant contributions to GDG Pune.",
+    "social": [
+      {
+        "linkType": "linkedin",
+        "url": "https://www.linkedin.com/in/namratamore"
+      },
+      {
+        "linkType": "twitter",
+        "url": "https://x.com/imnamratamore"
+      }
+    ],
+    "type": "Organizer"
+  }
+]

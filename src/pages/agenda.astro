@@ -1,0 +1,1306 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mainData } from '../data';
+import {
+  sessions,
+  tracks,
+  rowStarts,
+  placement,
+  eventDate,
+  stats,
+  TOPICS,
+  type AgendaSession,
+} from '../lib/agenda';
+
+const date = new Date(`${eventDate} 00:00:00`);
+const longDate = date.toLocaleDateString('en-GB', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+const isoDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const doorsOpen = sessions[0]?.startLabel;
+
+// Grid cells in reading order (row by row), so the mobile stacked view reads correctly.
+const cells = sessions
+  .map((session) => ({ session, ...placement(session) }))
+  .sort((a, b) => a.row - b.row || a.column - b.column);
+
+// Empty slots get a placeholder so the dashed column dividers stay continuous.
+const taken = new Set<string>();
+for (const c of cells) {
+  for (let r = c.row; r < c.row + c.rowSpan; r++) {
+    for (let col = c.column; col < c.column + c.columnSpan; col++) taken.add(`${r}:${col}`);
+  }
+}
+const empties = rowStarts.flatMap((_, i) =>
+  tracks
+    .map((_, j) => ({ row: i + 2, column: j + 2 }))
+    .filter(({ row, column }) => !taken.has(`${row}:${column}`)),
+);
+
+const trackColor = (name: string) => tracks.find((t) => t.name === name)?.color ?? 'yellow';
+const speakerNames = (s: AgendaSession) => s.speakers.map((p) => p.name).join(', ');
+const sessionsFor = (track: string) => sessions.filter((s) => s.common || s.track === track);
+const searchText = (s: AgendaSession) => `${s.title} ${speakerNames(s)} ${s.track}`.toLowerCase();
+// Breaks and everyone-together moments are on everyone's plan already.
+const saveable = (s: AgendaSession) => !s.common;
+
+const statItems = [
+  { value: stats.sessions, label: 'sessions', color: 'blue' },
+  { value: stats.speakers, label: 'speakers', color: 'red' },
+  { value: stats.tracks, label: 'parallel tracks', color: 'yellow' },
+  { value: stats.hours, label: 'hours', color: 'green' },
+];
+---
+
+<BaseLayout
+  title="Agenda"
+  description={`The full ${mainData.eventInfo.name} agenda: talks, panels and workshops across ${tracks.length} tracks.`}
+>
+  <section class="agenda container" data-date={isoDate}>
+    <header class="top">
+      <h1 class="title">
+        <span class="brace" aria-hidden="true">
+          &#123;
+        </span>
+        <span class="word">Agenda</span>
+        <span class="brace" aria-hidden="true">
+          &#125;
+        </span>
+      </h1>
+      <p class="text-lg intro">
+        {longDate}. Doors open at {doorsOpen}. Yellow rows bring everyone together in the main hall.
+        Star the talks you want and they'll gather in <strong>My plan</strong>.
+      </p>
+      <ul class="stats">
+        {statItems.map((item) => (
+          <li style={`--c: var(--${item.color}); --bg: var(--${item.color}-pastel)`}>
+            <strong data-count={item.value}>{item.value}</strong>
+            <span>{item.label}</span>
+          </li>
+        ))}
+      </ul>
+    </header>
+
+    <!-- Sticky bar: views, search and topic filters -->
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="Agenda views">
+        <span class="indicator" aria-hidden="true"></span>
+        <button role="tab" id="tab-overview" aria-controls="view-overview" aria-selected="true">
+          Overview
+        </button>
+        {tracks.map((track, i) => (
+          <button
+            role="tab"
+            id={`tab-${i}`}
+            aria-controls={`view-${i}`}
+            aria-selected="false"
+            tabindex="-1"
+            style={`--dot: var(--${track.color})`}
+          >
+            <i aria-hidden="true" />
+            {track.name}
+          </button>
+        ))}
+        <button
+          role="tab"
+          id="tab-plan"
+          aria-controls="view-plan"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          <svg class="star" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"></path>
+          </svg>
+          My plan{' '}
+          <span class="plan-count" data-plan-count>
+            0
+          </span>
+        </button>
+      </div>
+
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Search talks or speakers</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <input type="search" placeholder="Search talks or speakers" autocomplete="off" />
+        </label>
+        <div class="topics" role="group" aria-label="Filter by topic">
+          {TOPICS.map((topic) => (
+            <button class="topic" data-topic={topic.id} aria-pressed="false">
+              {topic.label}
+            </button>
+          ))}
+        </div>
+        <p class="result" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <!-- Overview: time grid with one column per track -->
+    <div class="view" id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
+      <div class="grid" style={`--tracks: ${tracks.length}`}>
+        <div class="head time-head">Time</div>
+        {tracks.map((track, i) => (
+          <div class="head" style={`grid-column: ${i + 2}; --accent: var(--${track.color})`}>
+            {track.name}
+          </div>
+        ))}
+        {rowStarts.map((start, i) => {
+          const common = sessions.find((s) => s.common && s.start === start);
+          const labelText = sessions.find((s) => s.start === start)!.startLabel;
+          return (
+            <div
+              class="time"
+              style={`grid-row: ${i + 2}; --order: ${(i + 2) * 100}`}
+              data-common={common ? '' : undefined}
+            >
+              {common ? `${common.startLabel} to ${common.endLabel}` : labelText}
+            </div>
+          );
+        })}
+        {empties.map(({ row, column }) => (
+          <div
+            class="empty"
+            style={`grid-row: ${row}; grid-column: ${column}`}
+            aria-hidden="true"
+          />
+        ))}
+        {cells.map(({ session, row, rowSpan, column, columnSpan }) => (
+          <article
+            class:list={['cell', session.common && 'common', session.isBreak && 'break']}
+            style={`grid-row: ${row} / span ${rowSpan}; grid-column: ${column} / span ${columnSpan}; --accent: var(--${trackColor(session.track)}); --order: ${row * 100 + column}`}
+            data-id={session.id}
+            data-start={session.start}
+            data-end={session.end}
+            data-topics={session.topics.join(' ')}
+            data-search={searchText(session)}
+          >
+            <span class="meta">
+              <span class="chip-track">{session.common ? 'Everyone' : session.track}</span>
+              {!session.common && (
+                <span class:list={['kind', `kind--${session.kind.toLowerCase()}`]}>
+                  {session.kind}
+                </span>
+              )}
+            </span>
+            <button class="open" data-open={session.id}>
+              {session.title}
+            </button>
+            {session.speakers.length > 0 && (
+              <span class="cell-speakers">{speakerNames(session)}</span>
+            )}
+            <span class="cell-time">
+              {session.startLabel} to {session.endLabel}
+            </span>
+            {saveable(session) && (
+              <button
+                class="save"
+                data-save={session.id}
+                aria-pressed="false"
+                aria-label={`Save “${session.title}” to my plan`}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
+                </svg>
+              </button>
+            )}
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <!-- One view per track: its sessions plus the shared ones, in time order -->
+    {tracks.map((track, i) => (
+      <div
+        class="view"
+        id={`view-${i}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${i}`}
+        hidden
+        style={`--accent: var(--${track.color}); --accent-pastel: var(--${track.color}-pastel)`}
+      >
+        <ol class="timeline">
+          {sessionsFor(track.name).map((session) => (
+            <li
+              class:list={[session.common && 'common', session.isBreak && 'break']}
+              data-id={session.id}
+              data-start={session.start}
+              data-end={session.end}
+              data-topics={session.topics.join(' ')}
+              data-search={searchText(session)}
+            >
+              <time>
+                {session.startLabel}
+                <small>to {session.endLabel}</small>
+              </time>
+              <div class="entry">
+                <button class="open" data-open={session.id}>
+                  {session.title}
+                </button>
+                {session.speakers.length > 0 && (
+                  <span class="cell-speakers">{speakerNames(session)}</span>
+                )}
+                {saveable(session) && (
+                  <button
+                    class="save"
+                    data-save={session.id}
+                    aria-pressed="false"
+                    aria-label={`Save “${session.title}” to my plan`}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    ))}
+
+    <!-- My plan: shared sessions plus the starred ones; filled in by the script -->
+    <div
+      class="view plan"
+      id="view-plan"
+      role="tabpanel"
+      aria-labelledby="tab-plan"
+      hidden
+      style="--accent: var(--yellow); --accent-pastel: var(--yellow-pastel)"
+    >
+      <div class="plan-empty">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"></path>
+        </svg>
+        <h2>Your plan is empty</h2>
+        <p>
+          Star talks in the overview or any track, and they'll line up here with the breaks around
+          them.
+        </p>
+      </div>
+      <div class="plan-head">
+        <p>Saved on this device only.</p>
+        <button class="button button--secondary" data-export>
+          Add my plan to calendar
+        </button>
+      </div>
+      <ol class="timeline">
+        {sessions.map((session) => (
+          <li
+            class:list={[session.common && 'common', session.isBreak && 'break']}
+            data-id={session.id}
+            data-plan-item
+            data-common={session.common ? '' : undefined}
+            data-start={session.start}
+            data-end={session.end}
+            data-title={session.title}
+            data-track={session.track}
+            hidden={!session.common}
+          >
+            <time>
+              {session.startLabel}
+              <small>to {session.endLabel}</small>
+            </time>
+            <div class="entry">
+              <button class="open" data-open={session.id}>
+                {session.title}
+              </button>
+              {!session.common && <span class="cell-speakers">{session.track}</span>}
+              <span class="clash" hidden />
+              {saveable(session) && (
+                <button
+                  class="save"
+                  data-save={session.id}
+                  aria-pressed="true"
+                  aria-label={`Remove “${session.title}” from my plan`}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <!-- Session details, filled from the matching template when a session is opened -->
+    <dialog class="details" aria-labelledby="details-title">
+      <div class="details-body"></div>
+      <div class="details-actions">
+        <button class="button" data-dialog-save hidden>
+          Save to my plan
+        </button>
+        <form method="dialog">
+          <button class="button button--outline">Close</button>
+        </form>
+      </div>
+    </dialog>
+    {sessions.map((session) => (
+      <template id={`session-${session.id}`} data-saveable={saveable(session) ? '' : undefined}>
+        <p class="details-meta">
+          {session.startLabel} to {session.endLabel} ·{' '}
+          {session.common ? 'Main hall, everyone' : `${session.track} · ${session.kind}`}
+        </p>
+        <h2 id="details-title">{session.title}</h2>
+        <p>{session.description}</p>
+        {session.speakers.length > 0 && (
+          <ul class="details-speakers">
+            {session.speakers.map((speaker) => (
+              <li>
+                <strong>{speaker.name}</strong>
+                {speaker.role && <span>{speaker.role}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </template>
+    ))}
+  </section>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+
+  gsap.registerPlugin(ScrambleTextPlugin);
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.querySelector<HTMLElement>('.agenda')!;
+  const $$ = <T extends HTMLElement = HTMLElement>(s: string) => [...root.querySelectorAll<T>(s)];
+
+  /* ---------- my plan (stored in this browser only) ---------- */
+  const STORE = 'devfest-pune-plan';
+  const load = (): Set<string> => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORE) ?? '[]'));
+    } catch {
+      return new Set();
+    }
+  };
+  const saved = load();
+  const persist = () => {
+    try {
+      localStorage.setItem(STORE, JSON.stringify([...saved]));
+    } catch {
+      /* storage unavailable: the plan still works for this visit */
+    }
+  };
+
+  function renderPlan() {
+    $$<HTMLButtonElement>('[data-save]').forEach((b) =>
+      b.setAttribute('aria-pressed', String(saved.has(b.dataset.save!))),
+    );
+    root.querySelector('[data-plan-count]')!.textContent = String(saved.size);
+    const plan = root.querySelector<HTMLElement>('#view-plan')!;
+    plan.classList.toggle('is-empty', saved.size === 0);
+
+    // Show shared sessions plus starred ones; flag starred talks that overlap.
+    let previous: HTMLElement | null = null;
+    $$('[data-plan-item]').forEach((item) => {
+      const isSaved = saved.has(item.dataset.id!);
+      item.hidden = !(item.dataset.common !== undefined || isSaved);
+      const clash = item.querySelector<HTMLElement>('.clash')!;
+      clash.hidden = true;
+      if (!isSaved) return;
+      if (previous && Number(item.dataset.start) < Number(previous.dataset.end)) {
+        clash.hidden = false;
+        clash.textContent = `Clashes with “${previous.dataset.title}”`;
+      }
+      previous = item;
+    });
+  }
+
+  function toggleSave(id: string, source?: HTMLElement) {
+    if (saved.has(id)) saved.delete(id);
+    else saved.add(id);
+    persist();
+    renderPlan();
+    if (motion && source && saved.has(id)) {
+      gsap.fromTo(
+        source,
+        { scale: 0.6, rotate: -30 },
+        { scale: 1, rotate: 0, duration: 0.6, ease: 'back.out(3)' },
+      );
+      gsap.fromTo(
+        '#tab-plan .plan-count',
+        { scale: 1.6 },
+        { scale: 1, duration: 0.5, ease: 'back.out(3)' },
+      );
+    }
+  }
+
+  root.addEventListener('click', (e) => {
+    const save = (e.target as HTMLElement).closest<HTMLElement>('[data-save]');
+    if (save) toggleSave(save.dataset.save!, save);
+  });
+
+  // Download the plan as an .ics file (times are Pune time, UTC+05:30).
+  root.querySelector('[data-export]')!.addEventListener('click', () => {
+    const [y, m, d] = root.dataset.date!.split('-').map(Number);
+    const stamp = (minutes: number) =>
+      new Date(Date.UTC(y, m - 1, d, 0, minutes - 330))
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .replace(/\.\d{3}/, '');
+    const events = $$('[data-plan-item]')
+      .filter((item) => saved.has(item.dataset.id!))
+      .map((item) =>
+        [
+          'BEGIN:VEVENT',
+          `UID:${item.dataset.id}-${root.dataset.date}@devfest.gdgpune.in`,
+          `DTSTAMP:${stamp(0)}`,
+          `DTSTART:${stamp(Number(item.dataset.start))}`,
+          `DTEND:${stamp(Number(item.dataset.end))}`,
+          `SUMMARY:${item.dataset.title!.replace(/[,;\\]/g, (c) => `\\${c}`)}`,
+          `LOCATION:${item.dataset.track} - DevFest Pune`,
+          'END:VEVENT',
+        ].join('\r\n'),
+      );
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//GDG Pune//DevFest Pune plan//EN',
+      ...events,
+      'END:VCALENDAR',
+      '',
+    ].join('\r\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+    link.download = 'my-devfest-pune-plan.ics';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+
+  /* ---------- search and topic filters ---------- */
+  const search = root.querySelector<HTMLInputElement>('.search input')!;
+  const topics = $$<HTMLButtonElement>('.topic');
+  const result = root.querySelector<HTMLElement>('.result')!;
+
+  function applyFilters() {
+    const query = search.value.trim().toLowerCase();
+    const active = topics
+      .filter((t) => t.getAttribute('aria-pressed') === 'true')
+      .map((t) => t.dataset.topic!);
+    const filtering = query !== '' || active.length > 0;
+    const matched = new Set<string>();
+    $$('[data-search]').forEach((el) => {
+      const hit =
+        (!query || el.dataset.search!.includes(query)) &&
+        (!active.length || active.some((t) => el.dataset.topics!.split(' ').includes(t)));
+      if (hit && !el.classList.contains('common')) matched.add(el.dataset.id!);
+      el.classList.toggle('dim', filtering && !hit);
+    });
+    result.textContent = filtering
+      ? matched.size
+        ? `${matched.size} session${matched.size === 1 ? '' : 's'} match`
+        : 'No sessions match. Try another word or topic.'
+      : '';
+  }
+  search.addEventListener('input', applyFilters);
+  topics.forEach((topic) =>
+    topic.addEventListener('click', () => {
+      topic.setAttribute('aria-pressed', String(topic.getAttribute('aria-pressed') !== 'true'));
+      applyFilters();
+    }),
+  );
+
+  /* ---------- tabs ---------- */
+  const tabs = $$<HTMLButtonElement>('[role="tab"]');
+  const indicator = root.querySelector<HTMLElement>('.indicator')!;
+  const selected = () => tabs.find((t) => t.getAttribute('aria-selected') === 'true')!;
+
+  const moveIndicator = (tab: HTMLElement, animate = true) =>
+    gsap.to(indicator, {
+      x: tab.offsetLeft,
+      y: tab.offsetTop,
+      width: tab.offsetWidth,
+      height: tab.offsetHeight,
+      duration: animate && motion ? 0.5 : 0,
+      ease: 'expo.out',
+    });
+
+  const revealItems = (view: HTMLElement) => {
+    if (!motion) return;
+    gsap.from(
+      view.querySelectorAll('.head, .time, .cell, .timeline li:not([hidden]), .plan-empty'),
+      {
+        y: 24,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'expo.out',
+        stagger: { amount: 0.5 },
+        clearProps: 'transform,opacity',
+      },
+    );
+  };
+
+  function select(tab: HTMLButtonElement) {
+    const current = selected();
+    if (current === tab) return;
+    const from = document.getElementById(current.getAttribute('aria-controls')!)!;
+    const to = document.getElementById(tab.getAttribute('aria-controls')!)!;
+    current.setAttribute('aria-selected', 'false');
+    current.tabIndex = -1;
+    tab.setAttribute('aria-selected', 'true');
+    tab.tabIndex = 0;
+    moveIndicator(tab);
+    gsap.to(from, {
+      opacity: 0,
+      y: -12,
+      duration: motion ? 0.2 : 0,
+      onComplete: () => {
+        from.hidden = true;
+        gsap.set(from, { clearProps: 'all' });
+        to.hidden = false;
+        revealItems(to);
+      },
+    });
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      const next = tabs[(i + step + tabs.length) % tabs.length];
+      next.focus();
+      select(next);
+    });
+  });
+  moveIndicator(tabs[0], false);
+  window.addEventListener('resize', () => moveIndicator(selected(), false));
+
+  /* ---------- session details ---------- */
+  const dialog = root.querySelector<HTMLDialogElement>('dialog.details')!;
+  const body = dialog.querySelector<HTMLElement>('.details-body')!;
+  const dialogSave = dialog.querySelector<HTMLButtonElement>('[data-dialog-save]')!;
+  let openId = '';
+  const syncDialogSave = () =>
+    (dialogSave.textContent = saved.has(openId) ? 'Remove from my plan' : 'Save to my plan');
+
+  root.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
+    const template = trigger && document.getElementById(`session-${trigger.dataset.open}`);
+    if (!(template instanceof HTMLTemplateElement)) return;
+    openId = trigger!.dataset.open!;
+    body.replaceChildren(template.content.cloneNode(true));
+    dialogSave.hidden = template.dataset.saveable === undefined;
+    syncDialogSave();
+    dialog.showModal();
+    if (motion) gsap.from(dialog, { y: 32, opacity: 0, duration: 0.4, ease: 'expo.out' });
+  });
+  dialogSave.addEventListener('click', () => {
+    toggleSave(openId);
+    syncDialogSave();
+  });
+  dialog.addEventListener('click', (e) => e.target === dialog && dialog.close());
+
+  /* ---------- live now (event day only, Pune time) ---------- */
+  const markLive = () => {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (today !== root.dataset.date) return;
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    $$('.cell[data-start], .timeline li[data-start]').forEach((el) => {
+      el.classList.toggle('live', minutes >= +el.dataset.start! && minutes < +el.dataset.end!);
+    });
+  };
+  markLive();
+  setInterval(markLive, 60_000);
+
+  renderPlan();
+
+  /* ---------- entrance ---------- */
+  if (motion) {
+    gsap
+      .timeline({ defaults: { ease: 'expo.out' } })
+      .from('.title .brace', { x: (i) => (i ? -80 : 80), opacity: 0, duration: 1 })
+      .from(
+        '.title .word',
+        { duration: 1, scrambleText: { text: '', chars: '{}<>/01_', revealDelay: 0.2 } },
+        0.1,
+      )
+      .from('.intro', { y: 20, opacity: 0, duration: 0.8 }, 0.3)
+      .from('.stats li', { y: 30, opacity: 0, duration: 0.8, stagger: 0.08 }, 0.4)
+      .from(
+        '[data-count]',
+        { textContent: 0, snap: { textContent: 1 }, duration: 1.6, ease: 'power3.out' },
+        0.4,
+      )
+      .from('.toolbar', { y: 20, opacity: 0, duration: 0.8 }, 0.6);
+    revealItems(document.getElementById('view-overview')!);
+  }
+</script>
+
+<style>
+  .agenda {
+    padding-block: var(--space-16) var(--space-20);
+  }
+
+  /* { Agenda } */
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 0.18em;
+    margin-bottom: var(--space-6);
+    font: 700 var(--text-display) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .brace {
+    font-weight: 500;
+    color: var(--green);
+    transform: translateY(-0.06em);
+  }
+  .brace:first-child {
+    color: var(--blue);
+  }
+  .intro {
+    max-width: 62ch;
+    margin: 0 0 var(--space-8);
+    color: var(--muted);
+  }
+  .intro strong {
+    color: var(--black);
+  }
+
+  /* Headline numbers */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+    margin: 0 0 var(--space-12);
+    padding: 0;
+    list-style: none;
+  }
+  .stats li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+  }
+  .stats strong {
+    font: 700 var(--text-h2) var(--font);
+    letter-spacing: -0.03em;
+    color: var(--black);
+  }
+  .stats span {
+    font: 500 var(--text-body) var(--font);
+  }
+
+  /* Sticky toolbar */
+  .toolbar {
+    position: sticky;
+    top: 67px;
+    z-index: 5;
+    margin: 0 calc(var(--gutter) * -1) var(--space-8);
+    padding: var(--space-3) var(--gutter);
+    background: rgb(255 255 255 / 0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Tabs with a sliding black pill behind the active one */
+  .tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: var(--radius-pill);
+    background: var(--black);
+    pointer-events: none;
+  }
+  [role='tab'] {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-5, 20px);
+    border: 1.5px solid var(--black);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--black);
+    font: 500 var(--text-sm) var(--font);
+    cursor: pointer;
+    transition: color 200ms ease;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: var(--white);
+  }
+  [role='tab'] i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--dot);
+  }
+  #tab-plan {
+    border-color: var(--yellow);
+    background: var(--yellow-pastel);
+  }
+  #tab-plan[aria-selected='true'] {
+    background: transparent;
+  }
+  #tab-plan .star {
+    width: 16px;
+    height: 16px;
+    fill: var(--yellow);
+  }
+  .plan-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background: var(--yellow-halftone);
+    color: var(--black);
+    font: 700 12px / 1 var(--font);
+  }
+
+  /* Search and topic chips */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 1 300px;
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--gray);
+  }
+  .search svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font: 400 var(--text-sm) var(--font);
+    color: var(--black);
+    outline: none;
+  }
+  .search:focus-within {
+    outline: 2px solid var(--blue);
+  }
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .topic {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    color: var(--black);
+    font: 500 13px / 18px var(--font);
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease;
+  }
+  .topic:hover {
+    border-color: var(--black);
+  }
+  .topic[aria-pressed='true'] {
+    background: var(--blue-pastel);
+    border-color: var(--blue);
+  }
+  .result {
+    margin: 0;
+    font: 500 var(--text-sm) var(--font);
+    color: var(--blue);
+  }
+
+  /* Overview time grid */
+  .grid {
+    display: grid;
+    grid-template-columns: 150px repeat(var(--tracks), minmax(0, 1fr));
+    border: 1.5px solid var(--black);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--white);
+  }
+  .head {
+    grid-row: 1;
+    padding: var(--space-4);
+    background: var(--black);
+    color: var(--white);
+    font: 600 var(--text-body) var(--font);
+    border-top: 4px solid var(--accent, var(--black));
+  }
+  .time-head {
+    grid-column: 1;
+    font-family: var(--font-code), monospace;
+  }
+  .time {
+    grid-column: 1;
+    padding: var(--space-4);
+    border-top: 1px solid var(--black);
+    font:
+      500 15px / 22px var(--font-code),
+      monospace;
+  }
+  .time[data-common] {
+    background: var(--yellow-pastel);
+  }
+  .empty {
+    border-top: 1px solid var(--black);
+    border-left: 1.5px dashed var(--black);
+    background: repeating-linear-gradient(135deg, transparent 0 10px, var(--gray) 10px 11px);
+  }
+  .cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-height: 96px;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-top: 1px solid var(--black);
+    border-left: 1.5px dashed var(--black);
+    background: var(--white);
+    transition:
+      background-color 200ms ease,
+      opacity 250ms ease,
+      filter 250ms ease;
+  }
+  /* Coloured strip on every session in its track colour */
+  .cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 4px;
+    background: var(--accent);
+    transform: scaleX(0.25);
+    transform-origin: left;
+    transition: transform 300ms ease;
+  }
+  .cell:hover {
+    background: var(--gray);
+  }
+  .cell:hover::before {
+    transform: scaleX(1);
+  }
+  .cell.common {
+    min-height: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    border-left: 0;
+    background: var(--yellow-pastel);
+  }
+  .cell.common::before {
+    display: none;
+  }
+  .cell.common:hover {
+    background: var(--yellow-halftone);
+  }
+  .meta {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .chip-track {
+    display: none;
+  }
+  .kind {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    font: 600 11px / 16px var(--font);
+    background: var(--gray);
+  }
+  .kind--panel {
+    background: var(--red-pastel);
+  }
+  .kind--break {
+    background: var(--yellow-pastel);
+  }
+
+  /* The title button covers the whole cell so anywhere opens the details */
+  .open {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--black);
+    text-align: left;
+    font: 600 var(--text-sm) var(--font);
+    cursor: pointer;
+  }
+  .cell .open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .cell.common .open {
+    font-size: 16px;
+  }
+  .cell.break .open {
+    font-weight: 500;
+  }
+  .cell-speakers {
+    font: 400 13px / 19px var(--font);
+    color: var(--muted);
+  }
+  .cell-time {
+    margin-top: auto;
+    padding-top: var(--space-2);
+    font:
+      400 12px / 18px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  .cell.common .cell-time {
+    display: none;
+  }
+
+  /* Star to save */
+  .save {
+    position: absolute;
+    z-index: 1;
+    right: var(--space-2);
+    bottom: var(--space-2);
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+  .save:hover {
+    background: var(--yellow-pastel);
+  }
+  .save svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--black);
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+  }
+  .save[aria-pressed='true'] svg {
+    fill: var(--yellow);
+    stroke: var(--yellow);
+  }
+
+  /* Filter results */
+  .dim {
+    opacity: 0.2;
+    filter: grayscale(1);
+  }
+
+  /* Live now (event day only; the class is added by the script) */
+  .cell.live,
+  .timeline li.live .entry {
+    outline: 3px solid var(--red);
+    outline-offset: -3px;
+  }
+  .cell.live .meta::after {
+    content: 'Live now';
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--red);
+    color: var(--white);
+    font: 600 11px / 16px var(--font);
+  }
+
+  /* Track and plan timelines */
+  .timeline {
+    list-style: none;
+    margin: 0 0 0 88px;
+    padding: 0;
+    border-left: 3px solid var(--accent);
+  }
+  .timeline li {
+    position: relative;
+    padding: 0 0 var(--space-4) var(--space-8);
+    transition:
+      opacity 250ms ease,
+      filter 250ms ease;
+  }
+  .timeline li::before {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 18px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 3px solid var(--accent);
+  }
+  .timeline li.common::before {
+    border-color: var(--yellow);
+  }
+  .timeline time {
+    position: absolute;
+    left: -100px;
+    top: 12px;
+    width: 76px;
+    text-align: right;
+    font:
+      600 15px / 20px var(--font-code),
+      monospace;
+  }
+  .timeline time small {
+    display: block;
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .entry {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-12) var(--space-4) var(--space-6);
+    border: 1.5px solid var(--gray);
+    border-radius: var(--radius-md);
+    background: var(--white);
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      transform 200ms ease;
+  }
+  .entry:hover {
+    background: var(--accent-pastel);
+    border-color: var(--accent);
+    transform: translateX(6px);
+  }
+  .entry .open {
+    font-size: 18px;
+    line-height: 26px;
+  }
+  .entry .open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .entry .save {
+    top: 50%;
+    bottom: auto;
+    right: var(--space-3);
+    translate: 0 -50%;
+  }
+  .timeline .common .entry {
+    background: var(--yellow-pastel);
+    border-color: transparent;
+  }
+  .clash {
+    align-self: flex-start;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--red-pastel);
+    font: 600 12px / 18px var(--font);
+  }
+  .clash[hidden] {
+    display: none;
+  }
+
+  /* My plan */
+  .plan-empty {
+    display: none;
+    padding: var(--space-16) var(--space-6);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+  }
+  .plan-empty svg {
+    width: 48px;
+    height: 48px;
+    fill: var(--yellow-pastel);
+    stroke: var(--yellow);
+    stroke-width: 1.4;
+  }
+  .plan-empty h2 {
+    margin: var(--space-4) 0 var(--space-2);
+    font: 700 var(--text-h4) var(--font);
+  }
+  .plan-empty p {
+    margin: 0;
+    color: var(--muted);
+  }
+  .plan.is-empty .plan-empty {
+    display: block;
+  }
+  .plan.is-empty .plan-head,
+  .plan.is-empty .timeline {
+    display: none;
+  }
+  .plan-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+  .plan-head p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  /* Details dialog */
+  .details {
+    width: min(640px, calc(100vw - 32px));
+    padding: var(--space-8);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--black);
+    box-shadow: 0 24px 64px rgb(30 30 30 / 0.2);
+  }
+  .details::backdrop {
+    background: rgb(30 30 30 / 0.5);
+    backdrop-filter: blur(2px);
+  }
+  .details :global(.details-meta) {
+    margin: 0 0 var(--space-2);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  .details :global(h2) {
+    font: 700 var(--text-h4) var(--font);
+  }
+  .details :global(.details-speakers) {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 0;
+    padding: var(--space-4) 0 0;
+    list-style: none;
+    border-top: 1px solid var(--gray);
+  }
+  .details :global(.details-speakers li) {
+    display: grid;
+  }
+  .details :global(.details-speakers span) {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .details-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  .details-actions form {
+    margin: 0;
+  }
+
+  /* Mobile: the grid becomes a stacked list, time first */
+  @media (max-width: 899px) {
+    .title {
+      font-size: 56px;
+      line-height: 64px;
+    }
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats li {
+      flex-direction: column;
+      gap: 0;
+    }
+    .tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    [role='tab'] {
+      flex: none;
+    }
+    .topics {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .topic {
+      flex: none;
+    }
+    .search {
+      flex: 1 1 100%;
+    }
+    .grid {
+      display: flex;
+      flex-direction: column;
+    }
+    .head,
+    .empty {
+      display: none;
+    }
+    .time,
+    .cell {
+      order: var(--order);
+    }
+    .time {
+      background: var(--black);
+      color: var(--white);
+    }
+    .time[data-common] {
+      display: none;
+    }
+    .cell {
+      min-height: 0;
+      border-left: 0;
+      padding-right: var(--space-12);
+    }
+    .chip-track {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--gray);
+      font: 600 11px / 16px var(--font);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .cell.common .chip-track {
+      background: var(--white);
+    }
+    .cell.common .cell-time {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .timeline {
+      margin-left: 72px;
+    }
+    .timeline time {
+      left: -82px;
+      width: 60px;
+      font-size: 13px;
+    }
+    .timeline li {
+      padding-left: var(--space-6);
+    }
+  }
+</style>

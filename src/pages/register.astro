@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { mainData, isRegistrationOpen } from '../data';
+
+// The page is built ahead of time, so the open/closed check runs at build time.
+// Rebuild and deploy after changing registeration.end_date in config.json.
+const open = isRegistrationOpen();
+---
+
+<BaseLayout title="Registration">
+  <div class="container">
+    <PageHeader title="Registration" />
+    {open ? (
+      <div class="widget">
+        <iframe
+          src="https://konfhub.com/widget/id/856108ee-a4f9-4fb4-afc3-f1edea656492"
+          id="konfhub-widget"
+          title={`Register for Google Developer Groups ${mainData.eventInfo.name}`}
+          width="100%"
+          height="500"
+          allow="payment"
+          class="konfhub-iframe"
+        />
+      </div>
+    ) : (
+      <p>Registrations are coming soon. Follow GDG Pune to hear when they open.</p>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .widget {
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+  }
+  .konfhub-iframe {
+    display: block;
+    width: 100%;
+    min-height: 700px;
+    border: 0;
+  }
+</style>

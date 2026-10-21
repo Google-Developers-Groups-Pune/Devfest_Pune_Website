@@ -1,0 +1,64 @@
+---
+import { mainData } from '../../data';
+
+const topics = mainData.eventInfo.expectation;
+const colors = ['var(--blue)', 'var(--red)', 'var(--yellow)', 'var(--green)'];
+// Each row repeats its content twice so it can loop seamlessly at -50%.
+const rows = [topics, [...topics].reverse()];
+---
+
+<section class="marquee" aria-label={`Topics: ${topics.join(', ')}`}>
+  {rows.map((row, r) => (
+    <div class="row" data-direction={r % 2 ? 1 : -1} aria-hidden="true">
+      {[0, 1].map(() => (
+        <span class="set">
+          {row.map((topic, i) => (
+            <span
+              class:list={['word', (i + r) % 2 && 'outline']}
+              style={`--c: ${colors[(i + r) % 4]}`}
+            >
+              {topic}
+            </span>
+          ))}
+        </span>
+      ))}
+    </div>
+  ))}
+</section>
+
+<style>
+  .marquee {
+    padding-block: var(--space-16);
+    overflow: hidden;
+    border-block: 1px solid var(--border);
+  }
+  .row {
+    display: flex;
+    width: max-content;
+    white-space: nowrap;
+  }
+  .set {
+    display: flex;
+  }
+  .word {
+    padding-inline: 0.3em;
+    font: 700 clamp(56px, 10vw, 152px) / 1.05 var(--font);
+    letter-spacing: -0.04em;
+    color: var(--c);
+  }
+  /* Small Google-coloured dot between words. */
+  .word::after {
+    content: '';
+    display: inline-block;
+    width: 0.16em;
+    height: 0.16em;
+    margin-left: 0.6em;
+    border-radius: 50%;
+    background: var(--c);
+    vertical-align: middle;
+  }
+  /* Every other word in black so the colours have room to breathe. */
+  .outline {
+    color: var(--black);
+  }
+</style>

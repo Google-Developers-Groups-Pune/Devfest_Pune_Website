@@ -1,0 +1,699 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { mainData } from '../data';
+
+const { eventInfo } = mainData;
+const start = new Date(eventInfo.startDate);
+const ist = (opts: Intl.DateTimeFormatOptions) =>
+  start.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata', ...opts });
+// "SUN · 13.12.2026"
+const dateLine = `${ist({ weekday: 'short' }).toUpperCase()} · ${ist({ day: '2-digit' })}.${ist({ month: '2-digit' })}.${ist({ year: 'numeric' })}`;
+
+// The 2026 theme topics become the badge tracks.
+const trackLooks = [
+  { main: '#4285f4', pastel: '#c3ecf6', text: '#ffffff' },
+  { main: '#f9ab00', pastel: '#ffe7a5', text: '#1e1e1e' },
+  { main: '#ea4335', pastel: '#f8d8d8', text: '#ffffff' },
+];
+const tracks = eventInfo.theme.topics
+  .split(/,\s*|\s*&\s*/)
+  .map((label, i) => ({ label, ...trackLooks[i % trackLooks.length] }));
+const roles = ['Attendee', 'Speaker', 'Volunteer', 'Organizer'];
+---
+
+<BaseLayout
+  title="Badge"
+  description={`Make your ${eventInfo.name} badge and profile picture, with a Pune skyline from Shaniwar Wada to Parvati. Free, and your photo never leaves your device.`}
+>
+  <section class="badge-page container" data-date-line={dateLine}>
+    <div class="form">
+      <p class="place">
+        <span class="pill">
+          <b>पुणे, भारत</b>
+          <span aria-hidden="true">|</span>Pune, India
+        </span>
+      </p>
+      <h1>
+        <span>Make your</span>
+        <span class="blue">DevFest badge</span>
+      </h1>
+      <p class="lead">
+        Type your name, pick your track and download a badge with Pune on it: Shaniwar Wada,
+        Parvati, a PMPML bus and a vada pav. Share it, or wear it as your profile picture before the
+        big day.
+      </p>
+
+      <label class="field">
+        <span class="label">Name on badge</span>
+        <input name="name" type="text" maxlength="40" placeholder="Your name" autocomplete="name" />
+      </label>
+
+      <fieldset>
+        <legend class="label">I'm coming as</legend>
+        <div class="options">
+          {roles.map((role, i) => (
+            <label class="option">
+              <input type="radio" name="role" value={role} checked={i === 0} />
+              <span>{role}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="label">Pick your track</legend>
+        <div class="options">
+          {tracks.map((track, i) => (
+            <label class="option" style={`--c: ${track.main}`}>
+              <input
+                type="radio"
+                name="track"
+                value={i}
+                checked={i === 0}
+                data-track={JSON.stringify(track)}
+              />
+              <span>
+                <i aria-hidden="true" />
+                {track.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div class="photo-row">
+        <label class="button button--outline upload">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4m0 0l-5 5m5-5l5 5M4 20h16"></path>
+          </svg>
+          <span data-photo-label>Add a photo</span>
+          <input type="file" accept="image/*" class="sr-only" />
+        </label>
+        <button class="link" data-remove-photo hidden>
+          Remove photo
+        </button>
+      </div>
+      <div class="adjust" data-adjust hidden>
+        <label class="zoom">
+          <span class="label">Zoom</span>
+          <input type="range" min="1" max="3" step="0.01" value="1" data-zoom />
+        </label>
+        <p class="hint">Drag the photo in the preview to reposition it.</p>
+      </div>
+      <p class="privacy">Your photo stays on this device. Nothing is uploaded.</p>
+    </div>
+
+    <div class="preview">
+      <div class="switch" role="tablist" aria-label="What to make">
+        <button role="tab" aria-selected="true" data-mode="badge">
+          Badge
+        </button>
+        <button role="tab" aria-selected="false" data-mode="avatar">
+          Profile picture
+        </button>
+      </div>
+
+      <!-- Badge on a lanyard; swings when you move across it -->
+      <div class="stage" data-view="badge">
+        <div class="hanger">
+          <div class="strap" aria-hidden="true">
+            <span>DEVFEST · PUNE · 2026 · DEVFEST · PUNE</span>
+          </div>
+          <div class="clip" aria-hidden="true"></div>
+          <canvas
+            class="badge-canvas"
+            role="img"
+            aria-label="Preview of your DevFest badge"
+          ></canvas>
+        </div>
+      </div>
+      <div class="stage avatar-stage" data-view="avatar" hidden>
+        <canvas
+          class="avatar-canvas"
+          role="img"
+          aria-label="Preview of your profile picture"
+        ></canvas>
+      </div>
+
+      <div class="actions">
+        <button class="button button--secondary" data-download>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"></path>
+          </svg>
+          Download PNG
+        </button>
+        <button class="button button--outline" data-share hidden>
+          Share
+        </button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import {
+    drawBadge,
+    drawAvatar,
+    BADGE_SIZE,
+    AVATAR_SIZE,
+    BADGE_PHOTO,
+    clampPhoto,
+    type BadgeState,
+  } from '../scripts/badge-art';
+
+  const root = document.querySelector<HTMLElement>('.badge-page')!;
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const badgeCanvas = root.querySelector<HTMLCanvasElement>('.badge-canvas')!;
+  const avatarCanvas = root.querySelector<HTMLCanvasElement>('.avatar-canvas')!;
+  badgeCanvas.width = BADGE_SIZE.width;
+  badgeCanvas.height = BADGE_SIZE.height;
+  avatarCanvas.width = avatarCanvas.height = AVATAR_SIZE;
+
+  const nameInput = root.querySelector<HTMLInputElement>('input[name="name"]')!;
+  const fileInput = root.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const removePhoto = root.querySelector<HTMLButtonElement>('[data-remove-photo]')!;
+  const photoLabel = root.querySelector<HTMLElement>('[data-photo-label]')!;
+  let mode: 'badge' | 'avatar' = 'badge';
+
+  const state: BadgeState = {
+    name: '',
+    role: 'Attendee',
+    track: JSON.parse(root.querySelector<HTMLInputElement>('input[name="track"]')!.dataset.track!),
+    photo: null,
+    dateLine: `${root.dataset.dateLine} · JW MARRIOTT`,
+    logo: null,
+    art: null,
+  };
+
+  // Remember name, role and track on this device (never the photo).
+  const STORE = 'devfest-pune-badge';
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) ?? '{}');
+    if (saved.name) nameInput.value = state.name = saved.name;
+    if (saved.role)
+      root.querySelector<HTMLInputElement>(`input[name="role"][value="${saved.role}"]`)?.click();
+    if (saved.track !== undefined)
+      root.querySelector<HTMLInputElement>(`input[name="track"][value="${saved.track}"]`)?.click();
+  } catch {
+    /* nothing saved, or storage unavailable */
+  }
+  const remember = () => {
+    try {
+      const track = root.querySelector<HTMLInputElement>('input[name="track"]:checked')!.value;
+      localStorage.setItem(STORE, JSON.stringify({ name: state.name, role: state.role, track }));
+    } catch {
+      /* storage unavailable */
+    }
+  };
+
+  const render = () => {
+    root.classList.toggle('has-photo', !!state.photo);
+    drawBadge(badgeCanvas.getContext('2d')!, state);
+    drawAvatar(avatarCanvas.getContext('2d')!, state);
+  };
+
+  // Lanyard state, shared by the physics loop below and the little swing on each change.
+  const swing = { angle: 0, velocity: 0, tiltY: 0 };
+  const nudge = (strength = 4) => {
+    if (motion && mode === 'badge') swing.velocity += strength * 0.35;
+  };
+
+  nameInput.addEventListener('input', () => {
+    state.name = nameInput.value;
+    render();
+    remember();
+  });
+  nameInput.addEventListener('change', () => nudge(3));
+  root.querySelectorAll<HTMLInputElement>('input[name="role"]').forEach((input) =>
+    input.addEventListener('change', () => {
+      state.role = input.value;
+      render();
+      remember();
+      nudge();
+    }),
+  );
+  root.querySelectorAll<HTMLInputElement>('input[name="track"]').forEach((input) =>
+    input.addEventListener('change', () => {
+      state.track = JSON.parse(input.dataset.track!);
+      render();
+      remember();
+      nudge(-5);
+    }),
+  );
+
+  // Photo stays in memory only.
+  const adjust = root.querySelector<HTMLElement>('[data-adjust]')!;
+  const zoom = root.querySelector<HTMLInputElement>('[data-zoom]')!;
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      state.photo = { image: img, zoom: 1, x: 0, y: 0 };
+      zoom.value = '1';
+      adjust.hidden = false;
+      removePhoto.hidden = false;
+      photoLabel.textContent = 'Change photo';
+      render();
+      nudge(6);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+  removePhoto.addEventListener('click', () => {
+    state.photo = null;
+    fileInput.value = '';
+    adjust.hidden = true;
+    removePhoto.hidden = true;
+    photoLabel.textContent = 'Add a photo';
+    render();
+  });
+  zoom.addEventListener('input', () => {
+    if (!state.photo) return;
+    state.photo.zoom = Number(zoom.value);
+    clampPhoto(state.photo);
+    render();
+  });
+
+  // Drag the photo inside its circle to reposition it, on either preview.
+  let draggingPhoto = false;
+  const circleFor = (canvas: HTMLCanvasElement) =>
+    canvas === badgeCanvas
+      ? BADGE_PHOTO
+      : { x: AVATAR_SIZE / 2, y: AVATAR_SIZE / 2, r: AVATAR_SIZE / 2 - 56 };
+  const toCanvas = (canvas: HTMLCanvasElement, e: PointerEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((e.clientY - rect.top) / rect.height) * canvas.height,
+      perPx: canvas.width / rect.width,
+    };
+  };
+  for (const canvas of [badgeCanvas, avatarCanvas]) {
+    let last: { x: number; y: number } | null = null;
+    canvas.addEventListener('pointerdown', (e) => {
+      const circle = circleFor(canvas);
+      const p = toCanvas(canvas, e);
+      if (!state.photo || Math.hypot(p.x - circle.x, p.y - circle.y) > circle.r) return;
+      draggingPhoto = true;
+      last = { x: e.clientX, y: e.clientY };
+      canvas.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      const circle = circleFor(canvas);
+      const p = toCanvas(canvas, e);
+      canvas.style.cursor =
+        state.photo && Math.hypot(p.x - circle.x, p.y - circle.y) <= circle.r
+          ? draggingPhoto
+            ? 'grabbing'
+            : 'grab'
+          : '';
+      if (!draggingPhoto || !last || !state.photo) return;
+      const d = circle.r * 2;
+      state.photo.x += ((e.clientX - last.x) * p.perPx) / d;
+      state.photo.y += ((e.clientY - last.y) * p.perPx) / d;
+      last = { x: e.clientX, y: e.clientY };
+      clampPhoto(state.photo);
+      render();
+    });
+    const stop = () => {
+      draggingPhoto = false;
+      last = null;
+    };
+    canvas.addEventListener('pointerup', stop);
+    canvas.addEventListener('pointercancel', stop);
+  }
+
+  // Badge / profile picture switch
+  root.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((tab) =>
+    tab.addEventListener('click', () => {
+      mode = tab.dataset.mode as typeof mode;
+      root
+        .querySelectorAll('[data-mode]')
+        .forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+      root
+        .querySelectorAll<HTMLElement>('[data-view]')
+        .forEach((v) => (v.hidden = v.dataset.view !== mode));
+      if (motion)
+        gsap.from(`[data-view="${mode}"]`, { y: 30, opacity: 0, duration: 0.6, ease: 'expo.out' });
+    }),
+  );
+
+  // Download and share
+  const fileName = () =>
+    `devfest-pune-2026-${mode}-${(state.name.trim() || 'me').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
+  const currentBlob = () =>
+    new Promise<Blob>((resolve) =>
+      (mode === 'badge' ? badgeCanvas : avatarCanvas).toBlob((b) => resolve(b!), 'image/png'),
+    );
+
+  root.querySelector('[data-download]')!.addEventListener('click', async () => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(await currentBlob());
+    link.download = fileName();
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  });
+  const shareButton = root.querySelector<HTMLButtonElement>('[data-share]')!;
+  const probe = new File([new Blob()], 'x.png', { type: 'image/png' });
+  if (navigator.canShare?.({ files: [probe] })) {
+    shareButton.hidden = false;
+    shareButton.addEventListener('click', async () => {
+      const file = new File([await currentBlob()], fileName(), { type: 'image/png' });
+      navigator
+        .share({ files: [file], text: "I'm going to DevFest Pune 2026! #DevFestPune" })
+        .catch(() => {});
+    });
+  }
+
+  // Lanyard physics: the badge swings with the pointer's sideways speed and settles back.
+  const hanger = root.querySelector<HTMLElement>('.hanger')!;
+  const stage = root.querySelector<HTMLElement>('.stage[data-view="badge"]')!;
+  if (motion) {
+    let lastX: number | null = null;
+    stage.addEventListener('pointermove', (e) => {
+      if (draggingPhoto) return;
+      if (lastX !== null) swing.velocity += (e.clientX - lastX) * 0.035;
+      lastX = e.clientX;
+      const r = stage.getBoundingClientRect();
+      swing.tiltY = ((e.clientX - r.left) / r.width - 0.5) * 16;
+    });
+    stage.addEventListener('pointerleave', () => {
+      lastX = null;
+      swing.tiltY = 0;
+    });
+    let tilt = 0;
+    gsap.ticker.add(() => {
+      // Damped spring back to hanging straight.
+      swing.velocity += -swing.angle * 0.03;
+      swing.velocity *= 0.92;
+      swing.angle = gsap.utils.clamp(-18, 18, swing.angle + swing.velocity);
+      tilt += (swing.tiltY - tilt) * 0.08;
+      gsap.set(hanger, { rotateZ: swing.angle, rotateY: tilt });
+    });
+    // Drop in on load.
+    gsap.from(hanger, { y: -500, rotateZ: -12, duration: 1.6, ease: 'bounce.out', delay: 0.2 });
+    gsap.from('.form > *', { y: 24, opacity: 0, duration: 0.8, stagger: 0.06, ease: 'expo.out' });
+  }
+
+  // Pick up a role and track restored from storage above.
+  state.role = root.querySelector<HTMLInputElement>('input[name="role"]:checked')!.value;
+  state.track = JSON.parse(
+    root.querySelector<HTMLInputElement>('input[name="track"]:checked')!.dataset.track!,
+  );
+
+  // Draw once the logo and fonts are ready.
+  const logo = new Image();
+  logo.onload = () => {
+    state.logo = logo;
+    render();
+  };
+  logo.src = '/img/devfest-logo.svg';
+  const art = new Image();
+  art.onload = () => {
+    state.art = art;
+    render();
+  };
+  art.src = '/img/badge/pune-panorama.webp';
+  document.fonts.ready.then(render);
+  render();
+</script>
+
+<style>
+  .badge-page {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+    padding-block: var(--space-16) var(--space-20);
+  }
+
+  /* Form */
+  .place {
+    margin: 0 0 var(--space-6);
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--gray);
+    font: 500 14px / 20px var(--font);
+  }
+  .pill b {
+    font-weight: 700;
+  }
+  .pill span {
+    color: var(--muted);
+  }
+  h1 {
+    margin-bottom: var(--space-6);
+    font: 700 clamp(44px, 5vw, 76px) / 0.98 var(--font);
+    letter-spacing: -0.045em;
+  }
+  h1 span {
+    display: block;
+  }
+  .blue {
+    color: var(--blue);
+  }
+  .lead {
+    max-width: 46ch;
+    margin: 0 0 var(--space-8);
+    font: var(--text-lg) var(--font);
+    color: var(--muted);
+  }
+  .label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font:
+      600 13px / 18px var(--font-code),
+      monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .field {
+    display: block;
+    margin-bottom: var(--space-6);
+  }
+  .field input {
+    width: 100%;
+    min-height: 60px;
+    padding: 0 var(--space-6);
+    border: 2px solid var(--black);
+    border-radius: var(--radius-md);
+    font: 500 var(--text-lg) var(--font);
+    color: var(--black);
+    background: var(--white);
+    outline: none;
+    transition: box-shadow 200ms ease;
+  }
+  .field input:focus {
+    box-shadow: 0 0 0 4px var(--yellow-halftone);
+  }
+  fieldset {
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    border: 0;
+  }
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .option span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-6);
+    border: 1.5px solid var(--black);
+    border-radius: var(--radius-pill);
+    font: 500 var(--text-body) var(--font);
+    cursor: pointer;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
+  }
+  .option span:hover {
+    background: var(--gray);
+  }
+  .option i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+  .option input:checked + span {
+    background: var(--black);
+    color: var(--white);
+  }
+  .option input:focus-visible + span {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+  .photo-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .upload {
+    cursor: pointer;
+  }
+  .upload svg,
+  .actions svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .upload:focus-within {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+  .link {
+    border: 0;
+    background: none;
+    color: var(--red);
+    font: 500 var(--text-sm) var(--font);
+    cursor: pointer;
+  }
+  .adjust {
+    margin-top: var(--space-4);
+  }
+  .zoom {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    max-width: 360px;
+  }
+  .zoom .label {
+    margin: 0;
+  }
+  .zoom input {
+    flex: 1;
+    accent-color: var(--blue);
+  }
+  .hint {
+    margin: var(--space-2) 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  /* Only capture touch (for dragging the photo) once there's a photo, so the page still scrolls. */
+  .has-photo .badge-canvas,
+  .has-photo .avatar-canvas {
+    touch-action: none;
+  }
+  .privacy {
+    margin: var(--space-3) 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* Preview */
+  .preview {
+    position: sticky;
+    top: 88px;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-6);
+  }
+  .switch {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--gray);
+  }
+  .switch button {
+    min-height: 40px;
+    padding: 0 var(--space-6);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font: 600 var(--text-sm) var(--font);
+    cursor: pointer;
+  }
+  .switch [aria-selected='true'] {
+    background: var(--black);
+    color: var(--white);
+  }
+  .stage {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    perspective: 1200px;
+  }
+  .stage[hidden] {
+    display: none;
+  }
+  .hanger {
+    display: grid;
+    justify-items: center;
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+  }
+  .strap {
+    width: 56px;
+    height: 150px;
+    overflow: hidden;
+    background: var(--black);
+    color: var(--yellow-halftone);
+    font:
+      600 12px / 56px var(--font-code),
+      monospace;
+    letter-spacing: 0.3em;
+    writing-mode: vertical-rl;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .clip {
+    width: 90px;
+    height: 26px;
+    margin-bottom: -14px;
+    border-radius: 8px 8px 4px 4px;
+    background: linear-gradient(#8a8f98, #5f6368);
+    position: relative;
+    z-index: 1;
+  }
+  .badge-canvas {
+    width: min(380px, 80vw);
+    height: auto;
+    aspect-ratio: 1080 / 1600;
+    filter: drop-shadow(14px 18px 0 var(--black));
+  }
+  .avatar-stage {
+    padding-top: var(--space-8);
+  }
+  .avatar-canvas {
+    width: min(440px, 84vw);
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 960px) {
+    .badge-page {
+      grid-template-columns: 1fr;
+      gap: var(--space-12);
+    }
+    .preview {
+      position: static;
+      order: -1;
+    }
+  }
+</style>

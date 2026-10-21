@@ -1,0 +1,98 @@
+---
+import { mainData } from '../../data';
+
+const { venue } = mainData.eventInfo;
+---
+
+<!-- A stylised (not to scale) map: roads draw in, then the pin drops on the venue. -->
+<div class="venue" data-tilt>
+  <svg class="map" viewBox="0 0 400 300" aria-hidden="true">
+    <g class="roads">
+      <path d="M-10 210 C 80 190, 150 230, 230 180 S 360 120, 410 140"></path>
+      <path d="M60 -10 C 80 80, 120 140, 110 310"></path>
+      <path d="M250 -10 C 240 60, 280 120, 260 200 S 230 280, 250 310"></path>
+      <path d="M-10 90 C 100 110, 200 70, 410 60"></path>
+    </g>
+    <g class="river">
+      <path d="M-10 270 C 90 240, 170 290, 260 250 S 380 230, 410 250"></path>
+    </g>
+    <g class="pin">
+      <circle class="pulse" cx="230" cy="150" r="10"></circle>
+      <circle class="pulse delay" cx="230" cy="150" r="10"></circle>
+      <path
+        class="marker"
+        d="M230 112c-14 0-24 10-24 23 0 17 24 37 24 37s24-20 24-37c0-13-10-23-24-23z"
+      ></path>
+      <circle cx="230" cy="135" r="8" fill="#fff"></circle>
+    </g>
+  </svg>
+  <div class="info">
+    <h2 id="venue-heading">{venue.name}</h2>
+    <p>{venue.address}</p>
+    <a class="button button--secondary" href={venue.map_link} rel="noopener" target="_blank">
+      Open in Maps
+    </a>
+  </div>
+</div>
+
+<style>
+  .venue {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--green-pastel);
+    transform-style: preserve-3d;
+  }
+  .map {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .roads path {
+    fill: none;
+    stroke: var(--white);
+    stroke-width: 10;
+    stroke-linecap: round;
+  }
+  .river path {
+    fill: none;
+    stroke: var(--blue-halftone);
+    stroke-width: 14;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+  .marker {
+    fill: var(--red);
+  }
+  .pulse {
+    fill: none;
+    stroke: var(--red);
+    stroke-width: 2;
+    transform-origin: 230px 150px;
+    animation: pulse 2.4s ease-out infinite;
+  }
+  .pulse.delay {
+    animation-delay: 1.2s;
+  }
+  @keyframes pulse {
+    from {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    to {
+      transform: scale(5);
+      opacity: 0;
+    }
+  }
+  .info {
+    padding: var(--space-6) var(--space-8) var(--space-8);
+    background: var(--white);
+    transform: translateZ(30px);
+  }
+  .info h2 {
+    margin-bottom: var(--space-2);
+  }
+  .info p {
+    margin: 0 0 var(--space-6);
+    color: var(--muted);
+  }
+</style>
