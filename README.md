@@ -42,6 +42,34 @@ results. Keep them in sync with the human-readable `date` and `time`.
 Registration opens when `eventInfo.registeration.link` is set and `end_date` is in the future.
 The site is static, so **rebuild and deploy** after changing it.
 
+## Adding an archive edition
+
+The archive page at `/archive/` is built from `src/data/archive/<year>/`, one folder per past
+edition. It is the one part of the site's content that is **not** imported through
+`src/data/index.ts` — the loader globs `src/data/archive/*/*.json` and finds the years on
+disk. Do not add the archive JSON to that index; it would break the year discovery.
+
+Each folder holds up to four files, and every one of them is optional:
+
+| File            | Holds                                                              |
+| --------------- | ------------------------------------------------------------------ |
+| `event.json`    | Edition name, date, venue, summary, headline stats                 |
+| `speakers.json` | Speakers, with photos in `public/img/archive/<year>/speakers/`     |
+| `sponsors.json` | Sponsor tiers, with logos in `public/img/archive/<year>/sponsors/` |
+| `schedule.json` | Sessions, grouped into tracks                                      |
+
+The page lists the years it finds, newest first. A folder missing one of its files still
+appears; that section shows an empty state. Images go in
+`public/img/archive/<year>/speakers/` and `public/img/archive/<year>/sponsors/`, and the
+JSON refers to them by filename only.
+
+Each track in `schedule.json` has a `kind`: `common` for the everyone-together talks, `track`
+for a parallel stage, `lounge` for the Community Lounge.
+
+The 2025 edition was generated from the repo's own 2025 sources by
+`scripts/seed-archive-2025.mjs`. The committed JSON is the source of truth from now on, so
+edit it directly. Rebuild and deploy to publish the change.
+
 ## Design system
 
 The site follows the DevFest Pune _Website style guide_ (light theme only). All of it lives as

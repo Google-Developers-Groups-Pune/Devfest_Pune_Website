@@ -1,0 +1,20 @@
+{
+  "year": "2025",
+  "name": "DevFest Pune 2025",
+  "date": "Saturday, 29th November 2025",
+  "venue": {
+    "name": "JW Marriott Hotel Pune",
+    "address": "JW Marriott Hotel, SB Road, Pune, 411016"
+  },
+  "summary": "DevFest 2025 was an unforgettable experience, uniting 1,000+ passionate participants and 35+ expert speakers for a day filled with inspiration and learning. Attendees engaged in 25+ dynamic sessions, featuring lightning talks, workshops, and discussions on cutting-edge technologies. The event showcased the power of community, collaboration, and knowledge exchange, with participants gaining insights into the latest trends and tools in tech.",
+  "stats": [
+    {
+      "name": "Participants",
+      "value": "1000+"
+    }
+  ],
+  "stages": [
+    "CXOs Round Table",
+    "AI for Educators"
+  ]
+}

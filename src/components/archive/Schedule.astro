@@ -1,0 +1,564 @@
+---
+import { buildGrid, type ArchiveEdition, type ArchiveTrack } from '../../lib/archive';
+
+interface Props {
+  edition: ArchiveEdition;
+}
+
+const { edition } = Astro.props;
+
+const grid = buildGrid(edition);
+const tracks = grid.columns;
+
+/**
+ * The tracks a session is listed under. A session listed under more than one track is
+ * one shared session, and the grid gives it a full row.
+ */
+const gridTracks = edition.tracks.filter(
+  (track) => track.kind === 'common' || track.kind === 'track',
+);
+/** The distinct tracks a session is listed under, and the first one that lists it. */
+const tracksOf = new Map<string, Set<ArchiveTrack>>();
+const ownerOf = new Map<string, ArchiveTrack>();
+for (const track of gridTracks) {
+  for (const session of track.sessions) {
+    const seen = tracksOf.get(session.id) ?? new Set<ArchiveTrack>();
+    seen.add(track);
+    tracksOf.set(session.id, seen);
+    if (!ownerOf.has(session.id)) ownerOf.set(session.id, track);
+  }
+}
+
+/**
+ * A common session spans the whole grid; a shared one does too. The rule is the loader's,
+ * rule for rule: the first track that lists the session, and the number of distinct tracks
+ * it is listed under.
+ */
+const isCommon = (id: string) =>
+  ownerOf.get(id)?.kind === 'common' || (tracksOf.get(id)?.size ?? 0) > 1;
+
+/** The common track's name and colour, for the chip a common cell carries. */
+const commonTrack = edition.tracks.find((track) => track.kind === 'common');
+const commonName = commonTrack?.name || 'Main Hall';
+const commonColor = commonTrack?.color ?? 'yellow';
+
+/**
+ * The Community Lounge is an area in the venue, not a stage, so it gets a band below the
+ * grid rather than a column of its own.
+ */
+const lounge = edition.tracks.find((track) => track.kind === 'lounge');
+const loungeSessions = lounge
+  ? [...lounge.sessions].sort(
+      (a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end),
+    )
+  : [];
+
+/** The rows, each with the cells and the placeholders that sit in it. */
+const rows = grid.rowStarts.map((start, i) => {
+  const row = i + 2; // row 1 is the header
+  return {
+    row,
+    start,
+    cells: grid.cells.filter((cell) => cell.row === row),
+    empties: grid.empties.filter((empty) => empty.row === row),
+  };
+});
+
+/** Every session the dialog can open, with the track it is listed under. */
+const dialogSessions = [
+  ...grid.cells.map((cell) => ({
+    kind: 'session',
+    session: cell.session,
+    track: isCommon(cell.session.id)
+      ? commonName
+      : (tracks[cell.column - 2]?.name ?? commonName),
+  })),
+  ...loungeSessions.map((session) => ({
+    kind: 'lounge',
+    session,
+    track: lounge?.name ?? 'Community Lounge',
+  })),
+];
+
+const hasSchedule = grid.cells.length > 0 && grid.rowStarts.length > 0;
+---
+
+{
+  hasSchedule ? (
+    <div class="schedule" data-schedule data-year={edition.year}>
+      <div
+        class="grid"
+        role="grid"
+        aria-label={`DevFest Pune ${edition.year} schedule`}
+        style={`--tracks: ${Math.max(tracks.length, 1)}`}
+      >
+        <div class="row head-row" role="row">
+          <div class="head time-head" role="columnheader">
+            Time
+          </div>
+          {tracks.map((track, i) => (
+            <div
+              class="head"
+              role="columnheader"
+              style={`grid-column: ${i + 2}; --accent: var(--${track.color})`}
+            >
+              {track.name}
+            </div>
+          ))}
+        </div>
+
+        {rows.map((row) => {
+          const commonCell = row.cells.find((cell) => isCommon(cell.session.id));
+          return (
+            <div class="row" role="row">
+              <div
+                class="time"
+                role="rowheader"
+                style={`grid-row: ${row.row}; --order: ${row.row * 100}`}
+                data-common={commonCell ? '' : undefined}
+              >
+                {commonCell
+                  ? `${commonCell.session.start} to ${commonCell.session.end}`
+                  : row.start}
+              </div>
+
+              {row.empties.map((empty) => (
+                <div
+                  class="empty-slot"
+                  style={`grid-row: ${empty.row}; grid-column: ${empty.column}`}
+                  aria-hidden="true"
+                />
+              ))}
+
+              {row.cells.map((cell) => {
+                const session = cell.session;
+                const common = isCommon(session.id);
+                const columnTrack = tracks[cell.column - 2];
+                const trackName = common ? commonName : columnTrack.name;
+                const accent = common ? commonColor : columnTrack.color;
+                return (
+                  <div
+                    class:list={['cell', common && 'common']}
+                    role="gridcell"
+                    aria-rowspan={cell.rowSpan}
+                    aria-colspan={cell.columnSpan}
+                    style={`grid-row: ${cell.row} / span ${cell.rowSpan}; grid-column: ${cell.column} / span ${cell.columnSpan}; --accent: var(--${accent}); --order: ${cell.row * 100 + cell.column}`}
+                  >
+                    <span class="cell-meta">
+                      <span class="chip-track">{trackName}</span>
+                      {!common && (
+                        <span class:list={['kind', `kind--${session.kind.toLowerCase()}`]}>
+                          {session.kind}
+                        </span>
+                      )}
+                    </span>
+                    <button class="open" data-open={session.id} data-kind="session">
+                      {session.title}
+                    </button>
+                    {session.speakers.length > 0 && (
+                      <span class="cell-speakers">{session.speakers.join(', ')}</span>
+                    )}
+                    <span class="cell-time">
+                      {session.start} to {session.end}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {lounge && loungeSessions.length > 0 && (
+        <section class="lounge" aria-labelledby={`lounge-heading-${edition.year}`}>
+          <h3 class="lounge-heading" id={`lounge-heading-${edition.year}`}>
+            {lounge.name}
+          </h3>
+          <p class="lounge-note">
+            An open area in the venue rather than a stage — drop in any time while these
+            sessions were running.
+          </p>
+          <ul class="lounge-list">
+            {loungeSessions.map((session) => (
+              <li>
+                <time class="lounge-time">{session.start}</time>
+                <button class="lounge-title" data-open={session.id} data-kind="lounge">
+                  {session.title}
+                </button>
+                {session.speakers.length > 0 && (
+                  <span class="lounge-speakers">{session.speakers.join(', ')}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <dialog class="details" aria-label="Session details">
+        <div class="details-body" />
+        <div class="details-actions">
+          <form method="dialog">
+            <button class="button button--outline">Close</button>
+          </form>
+        </div>
+      </dialog>
+
+      {dialogSessions.map(({ kind, session, track }) => (
+        <template id={`${kind}-${edition.year}-${session.id}`}>
+          <p class="details-meta">
+            {session.start} to {session.end} · {track} · {session.kind}
+          </p>
+          <h2 id={`details-title-${edition.year}-${session.id}`}>{session.title}</h2>
+          {session.description && <p>{session.description}</p>}
+          {session.speakers.length > 0 && (
+            <ul class="details-speakers">
+              {session.speakers.map((name) => (
+                <li>
+                  <strong>{name}</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+        </template>
+      ))}
+    </div>
+  ) : (
+    <p class="no-schedule">No schedule was recorded for this edition.</p>
+  )
+}
+
+<style>
+  /* The grid: a time column, then one column per track */
+  .grid {
+    display: grid;
+    grid-template-columns: 150px repeat(var(--tracks), minmax(0, 1fr));
+    border: 1.5px solid var(--black);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--white);
+  }
+  /* The rows carry role="row" but no box, so their children stay grid items */
+  .row {
+    display: contents;
+  }
+  .head {
+    grid-row: 1;
+    padding: var(--space-4);
+    background: var(--black);
+    color: var(--white);
+    font: 600 var(--text-body) var(--font);
+    border-top: 4px solid var(--accent, var(--black));
+  }
+  .time-head {
+    grid-column: 1;
+    font-family: var(--font-code), monospace;
+  }
+  .time {
+    grid-column: 1;
+    padding: var(--space-4);
+    border-top: 1px solid var(--black);
+    font:
+      500 15px / 22px var(--font-code),
+      monospace;
+  }
+  .time[data-common] {
+    background: var(--yellow-pastel);
+  }
+  /* A gap no session covers: hatched, so the column dividers stay continuous */
+  .empty-slot {
+    border-top: 1px solid var(--black);
+    border-left: 1.5px dashed var(--black);
+    background: repeating-linear-gradient(135deg, transparent 0 10px, var(--gray) 10px 11px);
+  }
+  .cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-height: 96px;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-top: 1px solid var(--black);
+    border-left: 1.5px dashed var(--black);
+    background: var(--white);
+    transition:
+      background-color 200ms ease,
+      opacity 250ms ease,
+      filter 250ms ease;
+  }
+  /* Coloured strip on every session in its track colour */
+  .cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 4px;
+    background: var(--accent);
+    transform: scaleX(0.25);
+    transform-origin: left;
+    transition: transform 300ms ease;
+  }
+  .cell:hover {
+    background: var(--gray);
+  }
+  .cell:hover::before {
+    transform: scaleX(1);
+  }
+  /* A common session runs the whole width, on the yellow pastel */
+  .cell.common {
+    min-height: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    border-left: 0;
+    background: var(--yellow-pastel);
+  }
+  .cell.common::before {
+    display: none;
+  }
+  .cell.common:hover {
+    background: var(--yellow-halftone);
+  }
+  .cell-meta {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .chip-track {
+    display: none;
+  }
+  .kind {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    font: 600 11px / 16px var(--font);
+    background: var(--gray);
+  }
+  .kind--panel {
+    background: var(--red-pastel);
+  }
+  .kind--break {
+    background: var(--yellow-pastel);
+  }
+  .kind--keynote {
+    background: var(--blue-pastel);
+  }
+  .kind--workshop {
+    background: var(--green-pastel);
+  }
+
+  /* The title button covers the whole cell, so anywhere opens the details */
+  .open {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--black);
+    text-align: left;
+    font: 600 var(--text-sm) var(--font);
+    cursor: pointer;
+  }
+  .cell .open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .cell.common .open {
+    font-size: 16px;
+  }
+  .cell-speakers {
+    font: 400 13px / 19px var(--font);
+    color: var(--muted);
+  }
+  .cell-time {
+    margin-top: auto;
+    padding-top: var(--space-2);
+    font:
+      400 12px / 18px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  .cell.common .cell-time {
+    display: none;
+  }
+
+  /* The Community Lounge band: an area in the venue, below the grid */
+  .lounge {
+    margin-top: var(--space-8);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--green-pastel);
+  }
+  .lounge-heading {
+    margin: 0 0 var(--space-2);
+    font: 700 var(--text-h4) var(--font);
+  }
+  .lounge-note {
+    margin: 0 0 var(--space-4);
+    color: var(--muted);
+    font: 500 var(--text-sm) var(--font);
+  }
+  .lounge-list {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .lounge-list li {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-1) var(--space-4);
+    align-items: baseline;
+  }
+  .lounge-time {
+    font:
+      600 var(--text-button) var(--font-code),
+      monospace;
+  }
+  .lounge-title {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--black);
+    text-align: left;
+    font: 600 var(--text-sm) var(--font);
+    cursor: pointer;
+  }
+  .lounge-title:hover {
+    text-decoration: underline;
+  }
+  .lounge-speakers {
+    grid-column: 2;
+    font: 400 13px / 19px var(--font);
+    color: var(--muted);
+  }
+
+  /* An edition with no schedule says so, quietly */
+  .no-schedule {
+    margin: 0;
+    padding-block: var(--space-4);
+    color: var(--muted);
+    font: 500 var(--text-body) var(--font);
+  }
+
+  /* Details dialog */
+  .details {
+    width: min(640px, calc(100vw - 32px));
+    padding: var(--space-8);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--black);
+    box-shadow: 0 24px 64px rgb(30 30 30 / 0.2);
+  }
+  .details::backdrop {
+    background: rgb(30 30 30 / 0.5);
+    backdrop-filter: blur(2px);
+  }
+  .details :global(.details-meta) {
+    margin: 0 0 var(--space-2);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  .details :global(h2) {
+    font: 700 var(--text-h4) var(--font);
+  }
+  .details :global(.details-speakers) {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 0;
+    padding: var(--space-4) 0 0;
+    list-style: none;
+    border-top: 1px solid var(--gray);
+  }
+  .details :global(.details-speakers li) {
+    display: grid;
+  }
+  .details-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  .details-actions form {
+    margin: 0;
+  }
+
+  /* Mobile: the grid becomes a stacked list, time first */
+  @media (max-width: 899px) {
+    .grid {
+      display: flex;
+      flex-direction: column;
+    }
+    .head,
+    .empty-slot {
+      display: none;
+    }
+    .time,
+    .cell {
+      order: var(--order);
+    }
+    .time {
+      background: var(--black);
+      color: var(--white);
+    }
+    .time[data-common] {
+      display: none;
+    }
+    .cell {
+      min-height: 0;
+      border-left: 0;
+      padding-right: var(--space-12);
+    }
+    .chip-track {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--gray);
+      font: 600 11px / 16px var(--font);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .cell.common .chip-track {
+      background: var(--white);
+    }
+    .cell.common .cell-time {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // One schedule panel per edition, each with its own dialog and its own templates.
+  document.querySelectorAll<HTMLElement>('[data-schedule]').forEach((root) => {
+    const year = root.dataset.year ?? '';
+    const dialog = root.querySelector<HTMLDialogElement>('dialog.details');
+    const body = dialog?.querySelector<HTMLElement>('.details-body');
+    if (!dialog || !body) return;
+
+    root.addEventListener('click', (e) => {
+      const trigger = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
+      if (!trigger) return;
+      const kind = trigger.dataset.kind ?? 'session';
+      const template = document.getElementById(`${kind}-${year}-${trigger.dataset.open}`);
+      if (!(template instanceof HTMLTemplateElement)) return;
+      body.replaceChildren(template.content.cloneNode(true));
+      // The title lives in the copied content, so the dialog is named by it.
+      const heading = body.querySelector('h2');
+      if (heading) {
+        dialog.setAttribute('aria-labelledby', heading.id);
+        dialog.removeAttribute('aria-label');
+      }
+      dialog.showModal();
+      if (motion) gsap.from(dialog, { y: 32, opacity: 0, duration: 0.4, ease: 'expo.out' });
+    });
+
+    dialog.addEventListener('click', (e) => e.target === dialog && dialog.close());
+  });
+</script>

@@ -25,6 +25,11 @@
     "visible": true
   },
   {
+    "name": "Archive",
+    "path": "/archive/",
+    "visible": true
+  },
+  {
     "name": "Registration",
     "path": "/register/",
     "visible": true,

@@ -1,0 +1,446 @@
+---
+import {
+  speakerRows,
+  type ArchiveEdition,
+  type ArchiveSession,
+  type ArchiveTrack,
+} from '../../lib/archive';
+
+interface Props {
+  edition: ArchiveEdition;
+}
+
+const { edition } = Astro.props;
+
+const rows = speakerRows(edition);
+
+/** Two names are the same person when they read the same, trimmed and case-folded. */
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** The id a speaker's dialog content lives under, slugged the way the live site slugs a name. */
+const slug = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+/**
+ * The track a session belongs to: the first track that lists it, unless a common track
+ * lists it too — the loader's canonical rule, and the one the agenda uses.
+ */
+const trackOf = (sessionId: string): ArchiveTrack | undefined => {
+  let found: ArchiveTrack | undefined;
+  for (const track of edition.tracks) {
+    if (!track.sessions.some((session) => session.id === sessionId)) continue;
+    if (!found || (found.kind !== 'common' && track.kind === 'common')) found = track;
+  }
+  return found;
+};
+
+/** The time a session ran, from the archive's own "HH:MM" strings. */
+const timeOf = (session: ArchiveSession) =>
+  session.start && session.end
+    ? `${session.start} to ${session.end}`
+    : session.start || session.end;
+
+/** The other people on a session, so a panelist is never listed as their own co-speaker. */
+const othersOf = (session: ArchiveSession, name: string) =>
+  session.speakers.filter((other) => !sameName(other, name));
+
+/** One card's worth of data, ready to render. */
+const cards = rows.map((row) => {
+  const sessions = row.sessions.map((session) => {
+    const track = trackOf(session.id);
+    return {
+      session,
+      track: track?.name ?? '',
+      meta: [timeOf(session), track?.name ?? '', session.kind].filter(Boolean).join(' · '),
+      others: othersOf(session, row.name),
+    };
+  });
+  const first = sessions[0];
+  return {
+    row,
+    slug: slug(row.name),
+    sessions,
+    /** The card shows the speaker's first session; the dialog lists all of them. */
+    track: first?.track ?? '',
+    time: first ? timeOf(first.session) : '',
+  };
+});
+---
+
+{
+  cards.length > 0 ? (
+    <div class="speakers" data-speakers data-year={edition.year}>
+      <ul class="grid" aria-label={`Speakers at DevFest Pune ${edition.year}`}>
+        {cards.map((card, i) => (
+          <li
+            class="card"
+            style={`--c: var(--${card.row.color}); --bg: var(--${card.row.color}-pastel)`}
+          >
+            <div class:list={['portrait', `shape-${i % 4}`]}>
+              {card.row.image ? (
+                <img
+                  src={card.row.image}
+                  alt=""
+                  width="400"
+                  height="400"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <span class="initials" aria-hidden="true">
+                  {card.row.initials}
+                </span>
+              )}
+              {card.row.moderator && <span class="badge">Moderator</span>}
+            </div>
+            <button class="open" data-open={card.slug}>
+              <span class="name">{card.row.name}</span>
+            </button>
+            <p class="role">{card.row.role}</p>
+            {card.sessions.length > 0 ? (
+              <>
+                <span class="chip">{card.track}</span>
+                <p class="talk">
+                  <i aria-hidden="true" />
+                  <span>{card.sessions[0].session.title}</span>
+                </p>
+                <p class="when">{card.time}</p>
+              </>
+            ) : (
+              <p class="no-session">Session details were not recorded.</p>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <dialog class="details" aria-label="Speaker details">
+        <div class="details-body" />
+        <div class="details-actions">
+          <form method="dialog">
+            <button class="button button--outline">Close</button>
+          </form>
+        </div>
+      </dialog>
+
+      {cards.map((card) => (
+        <template id={`speaker-${edition.year}-${card.slug}`}>
+          <div
+            class="d-head"
+            style={`--bg: var(--${card.row.color}-pastel); --c: var(--${card.row.color})`}
+          >
+            {card.row.image ? (
+              <img src={card.row.image} alt="" width="120" height="120" />
+            ) : (
+              <span class="d-initials" aria-hidden="true">
+                {card.row.initials}
+              </span>
+            )}
+            <div>
+              <h2 id={`speaker-name-${edition.year}-${card.slug}`}>{card.row.name}</h2>
+              <p>{card.row.moderator ? `Moderator · ${card.row.role}` : card.row.role}</p>
+            </div>
+          </div>
+          {card.sessions.length > 0 ? (
+            card.sessions.map(({ session, meta, others }) => (
+              <section class="d-session">
+                <p class="d-meta">{meta}</p>
+                <h3>{session.title}</h3>
+                {session.description && <p>{session.description}</p>}
+                {others.length > 0 && <p class="d-with">With {others.join(', ')}</p>}
+              </section>
+            ))
+          ) : (
+            <p class="d-none">Session details were not recorded.</p>
+          )}
+          {card.row.links.length > 0 && (
+            <p class="d-links">
+              {card.row.links.map((link) => (
+                <a href={link.url} rel="noopener" target="_blank">
+                  {link.label}
+                </a>
+              ))}
+            </p>
+          )}
+        </template>
+      ))}
+    </div>
+  ) : (
+    <p class="no-speakers">No speakers were recorded for this edition.</p>
+  )
+}
+
+<style>
+  /* The card grid: one column per card, as many as fit */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-8) var(--gutter);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background-color 300ms ease;
+  }
+  .card:hover {
+    background: var(--gray);
+  }
+
+  /* Material-style shapes that morph to a circle on hover */
+  .portrait {
+    position: relative;
+    aspect-ratio: 1;
+    margin-bottom: var(--space-3);
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-radius 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .shape-0 {
+    border-radius: 999px 999px 24px 24px; /* arch */
+  }
+  .shape-1 {
+    border-radius: 50% 12px 50% 12px; /* leaf */
+  }
+  .shape-2 {
+    border-radius: 32%; /* squircle */
+  }
+  .shape-3 {
+    border-radius: 24px 50% 24px 50%; /* petal */
+  }
+  .card:hover .portrait {
+    border-radius: 50%;
+  }
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card:hover .portrait img {
+    transform: scale(1.06);
+  }
+  .initials {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    font: 700 clamp(56px, 7vw, 88px) / 1 var(--font);
+    letter-spacing: -0.04em;
+    color: var(--c);
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card:hover .initials {
+    transform: scale(1.1) rotate(-6deg);
+  }
+  .badge {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-3);
+    translate: -50% 0;
+    padding: 2px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    font: 600 12px / 18px var(--font);
+    white-space: nowrap;
+  }
+
+  /* The name button's overlay covers the card, so anywhere opens the details */
+  .open {
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .name {
+    font: 700 var(--text-lg) var(--font);
+    color: var(--black);
+  }
+  .role {
+    margin: 0;
+    font: 400 var(--text-sm) var(--font);
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  /* The track label: the shared chip, in the track's pastel */
+  .chip {
+    align-self: flex-start;
+    background: var(--bg);
+  }
+  .talk {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    font: 500 var(--text-sm) var(--font);
+  }
+  .talk i {
+    flex: none;
+    width: 4px;
+    margin-block: 3px;
+    border-radius: 2px;
+    background: var(--c);
+  }
+  .talk span {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .when {
+    margin: 0;
+    padding-left: 12px;
+    font:
+      400 12px / 18px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  /* A speaker with no session still says who they are */
+  .no-session {
+    margin: var(--space-2) 0 0;
+    font: 400 var(--text-sm) var(--font);
+    color: var(--muted);
+  }
+
+  /* An edition with no speakers says so, quietly */
+  .no-speakers {
+    margin: 0;
+    padding-block: var(--space-4);
+    color: var(--muted);
+    font: 500 var(--text-body) var(--font);
+  }
+
+  /* Details dialog */
+  .details {
+    width: min(620px, calc(100vw - 32px));
+    padding: 0 0 var(--space-8);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--black);
+    box-shadow: 0 24px 64px rgb(30 30 30 / 0.2);
+    overflow: hidden;
+  }
+  .details::backdrop {
+    background: rgb(30 30 30 / 0.5);
+    backdrop-filter: blur(2px);
+  }
+  .details-body > :global(*:not(.d-head)) {
+    margin-inline: var(--space-8);
+  }
+  .details :global(.d-head) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    background: var(--bg);
+  }
+  .details :global(.d-head img),
+  .details :global(.d-initials) {
+    flex: none;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--white);
+  }
+  .details :global(.d-initials) {
+    display: grid;
+    place-items: center;
+    font: 700 36px / 1 var(--font);
+    color: var(--c);
+  }
+  .details :global(.d-head h2) {
+    margin: 0 0 var(--space-1);
+    font: 700 var(--text-h4) var(--font);
+  }
+  .details :global(.d-head p) {
+    margin: 0;
+    color: var(--black);
+  }
+  .details :global(.d-meta) {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-2);
+    font:
+      500 14px / 20px var(--font-code),
+      monospace;
+    color: var(--muted);
+  }
+  .details :global(h3) {
+    font: 700 var(--text-lg) var(--font);
+    margin-bottom: var(--space-2);
+  }
+  .details :global(.d-with),
+  .details :global(.d-links),
+  .details :global(.d-none) {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .details :global(.d-links) {
+    display: flex;
+    gap: var(--space-4);
+    text-transform: capitalize;
+  }
+  /* A speaker with more than one session gets them one under the other */
+  .details :global(.d-session + .d-session) {
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--gray);
+  }
+  .details-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) var(--space-8) 0;
+  }
+  .details-actions form {
+    margin: 0;
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // One speakers panel per edition, each with its own dialog and its own templates.
+  document.querySelectorAll<HTMLElement>('[data-speakers]').forEach((root) => {
+    const year = root.dataset.year ?? '';
+    const dialog = root.querySelector<HTMLDialogElement>('dialog.details');
+    const body = dialog?.querySelector<HTMLElement>('.details-body');
+    if (!dialog || !body) return;
+
+    root.addEventListener('click', (e) => {
+      const trigger = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
+      if (!trigger) return;
+      const template = document.getElementById(`speaker-${year}-${trigger.dataset.open}`);
+      if (!(template instanceof HTMLTemplateElement)) return;
+      body.replaceChildren(template.content.cloneNode(true));
+      // The name lives in the copied content, so the dialog is named by it.
+      const heading = body.querySelector('h2');
+      if (heading) {
+        dialog.setAttribute('aria-labelledby', heading.id);
+        dialog.removeAttribute('aria-label');
+      }
+      dialog.showModal();
+      if (motion) gsap.from(dialog, { y: 32, opacity: 0, duration: 0.4, ease: 'expo.out' });
+    });
+
+    dialog.addEventListener('click', (e) => e.target === dialog && dialog.close());
+  });
+</script>
