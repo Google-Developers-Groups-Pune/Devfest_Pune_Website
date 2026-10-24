@@ -1,0 +1,187 @@
+{
+  "tiers": [
+    {
+      "category": "Title Sponsor",
+      "color": "#CFF1FA",
+      "sponsors": [
+        {
+          "name": "Google For Developers",
+          "logo": "googlefordevelopers.png",
+          "link": "https://developers.google.com"
+        }
+      ]
+    },
+    {
+      "category": "Gold Sponsor",
+      "color": "#FFF5C2",
+      "sponsors": [
+        {
+          "name": "GoDaddy",
+          "logo": "GoDaddy.png",
+          "link": "https://www.godaddy.com/"
+        },
+        {
+          "name": "Gruve.Ai",
+          "logo": "gruve.png",
+          "link": "https://gruve.ai/"
+        }
+      ]
+    },
+    {
+      "category": "Silver Sponsor",
+      "color": "#F1F1F1",
+      "sponsors": [
+        {
+          "name": "Nasdaq",
+          "logo": "nasdaq.png",
+          "link": "https://www.nasdaq.com/"
+        },
+        {
+          "name": "ClearRoute",
+          "logo": "clearroute.png",
+          "link": "https://clearroute.io/"
+        }
+      ]
+    },
+    {
+      "category": "Booth Partners",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "Jozu",
+          "link": "https://jozu.com/",
+          "logo": "Jozu.png"
+        },
+        {
+          "name": "NonStop",
+          "link": "https://nonstopio.com/",
+          "logo": "nonStop.svg"
+        },
+        {
+          "name": "Rezoomex",
+          "link": "https://rezoomex.com/",
+          "logo": "rezoomex.png"
+        },
+        {
+          "name": "Schlumberger",
+          "link": "https://www.slb.com/",
+          "logo": "slb.svg"
+        },
+        {
+          "name": "Technogise",
+          "link": "https://www.technogise.com/",
+          "logo": "technogise.png"
+        },
+        {
+          "name": "Saturo Academy",
+          "link": "https://saturoacademy.com",
+          "logo": "saturo-academy.png"
+        },
+        {
+          "name": "Nudgebee",
+          "link": "https://nudgebee.com/",
+          "logo": "nudgebee.png"
+        }
+      ]
+    },
+    {
+      "category": "Podcast Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "BK3 Studios",
+          "link": "https://linktr.ee/amanssidhu",
+          "logo": "bk3.png"
+        }
+      ]
+    },
+    {
+      "category": "Photography Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "KNM Studios",
+          "link": "https://knmstudio.in/index.html",
+          "logo": "knm.png"
+        }
+      ]
+    },
+    {
+      "category": "Production Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "CheChi Media",
+          "link": "https://www.linkedin.com/company/chechi-media/",
+          "logo": "chechi-media.png"
+        }
+      ]
+    },
+    {
+      "category": "Swag Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "EventDoor",
+          "link": "https://www.eventdoor.in/",
+          "logo": "eventdoor.png"
+        }
+      ]
+    },
+    {
+      "category": "Knowledge Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "Mastra.ai",
+          "link": "https://mastra.ai",
+          "logo": "mastra.png"
+        }
+      ]
+    },
+    {
+      "category": "Sustainability Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "PadCareLabs",
+          "link": "https://padcarelabs.com",
+          "logo": "padcare.png"
+        }
+      ]
+    },
+    {
+      "category": "Ticketing Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "Konfhub",
+          "link": "https://konfhub.com/",
+          "logo": "konfhub.svg"
+        }
+      ]
+    },
+    {
+      "category": "CFP Partner",
+      "color": "#FFFF",
+      "sponsors": [
+        {
+          "name": "Sessionize",
+          "link": "https://sessionize.com/",
+          "logo": "sessionize.svg"
+        }
+      ]
+    },
+    {
+      "category": "Communication Partner",
+      "color": "#FFF",
+      "sponsors": [
+        {
+          "name": "Scalesure",
+          "link": "https://www.scalesure.in/",
+          "logo": "scalesure.svg"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,447 @@
+{
+  "tracks": [
+    {
+      "id": "main",
+      "name": "Main Hall",
+      "kind": "common",
+      "color": "yellow",
+      "sessions": [
+        {
+          "id": "1000",
+          "title": "Registration",
+          "description": "Event registration and check-in",
+          "start": "08:00",
+          "end": "10:00",
+          "kind": "Break",
+          "speakers": []
+        },
+        {
+          "id": "1001",
+          "title": "Announcements & Activities",
+          "description": "Event announcements and activities",
+          "start": "09:30",
+          "end": "10:00",
+          "kind": "Everyone",
+          "speakers": []
+        },
+        {
+          "id": "1002",
+          "title": "Welcome Note - DevRel Team and Organizers",
+          "description": "Official welcome to DevFest Pune 2025 by Harsh Dattani",
+          "start": "10:00",
+          "end": "10:30",
+          "kind": "Keynote",
+          "speakers": [
+            "Harsh Dattani"
+          ]
+        },
+        {
+          "id": "1003",
+          "title": "The 10x Software Developer with Jules",
+          "description": "Keynote session on becoming a 10x software developer",
+          "start": "10:30",
+          "end": "11:00",
+          "kind": "Keynote",
+          "speakers": [
+            "Shivani Poddar"
+          ]
+        },
+        {
+          "id": "1003b",
+          "title": "Tea Break",
+          "description": "Networking and refreshment break",
+          "start": "11:00",
+          "end": "11:30",
+          "kind": "Break",
+          "speakers": []
+        },
+        {
+          "id": "1007",
+          "title": "Lunch Break",
+          "description": "Midday lunch and networking",
+          "start": "13:00",
+          "end": "14:00",
+          "kind": "Break",
+          "speakers": []
+        },
+        {
+          "id": "1025",
+          "title": "Tea Break",
+          "description": "Evening networking and refreshment break",
+          "start": "16:30",
+          "end": "17:00",
+          "kind": "Break",
+          "speakers": []
+        },
+        {
+          "id": "1026",
+          "title": "Closing Note - GDG Pune & Facilitation along with Swag distribution",
+          "description": "Event closing ceremony with GDG Pune team, facilitation, and swag distribution",
+          "start": "17:00",
+          "end": "17:30",
+          "kind": "Everyone",
+          "speakers": []
+        }
+      ]
+    },
+    {
+      "id": "track-1",
+      "name": "Track 1",
+      "kind": "track",
+      "color": "blue",
+      "sessions": [
+        {
+          "id": "1004",
+          "title": "Securing the Agentic AI Ecosystem",
+          "description": "Learn about securing AI systems in the agentic ecosystem",
+          "start": "11:30",
+          "end": "12:00",
+          "kind": "Talk",
+          "speakers": [
+            "Bhaskar Annadata",
+            "Amit Modak"
+          ]
+        },
+        {
+          "id": "1005",
+          "title": "Practical Lessons from Building an Agentic-First Developer Platform",
+          "description": "Explore how agentic AI is transforming platform engineering from pilot projects to production platforms",
+          "start": "12:00",
+          "end": "12:30",
+          "kind": "Talk",
+          "speakers": [
+            "Supriya Rao"
+          ]
+        },
+        {
+          "id": "1006",
+          "title": "Security of the AI",
+          "description": "Deep dive into AI security challenges and solutions",
+          "start": "12:30",
+          "end": "13:00",
+          "kind": "Talk",
+          "speakers": [
+            "Dharmesh Vaya"
+          ]
+        },
+        {
+          "id": "1008",
+          "title": "Rethinking Product Mindset in the AI Era",
+          "description": "Exploring product thinking in the age of artificial intelligence",
+          "start": "14:00",
+          "end": "14:30",
+          "kind": "Talk",
+          "speakers": [
+            "Jyoti Jain"
+          ]
+        },
+        {
+          "id": "1009",
+          "title": "Stop Building AI Apps. Start Building AI Businesses.",
+          "description": "Shift your focus from building AI applications to creating sustainable AI businesses",
+          "start": "14:30",
+          "end": "15:00",
+          "kind": "Talk",
+          "speakers": [
+            "Vishal Virani"
+          ]
+        },
+        {
+          "id": "1009b",
+          "title": "Intro to AI Agents and ADK",
+          "description": "Introduction to AI Agents and the Agent Development Kit (ADK)",
+          "start": "15:00",
+          "end": "15:30",
+          "kind": "Talk",
+          "speakers": [
+            "Vaibhav Malpani"
+          ]
+        },
+        {
+          "id": "1009c",
+          "title": "Panel Discussion - Gen AI",
+          "description": "Panel discussion on Generative AI with industry experts",
+          "start": "15:30",
+          "end": "16:30",
+          "kind": "Panel",
+          "speakers": [
+            "Himanshu Jain",
+            "Rohit Sharma",
+            "Jayesh Prajapati",
+            "Yogesh Kulkarni",
+            "Mukta Aphale"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "track-2",
+      "name": "Track 2",
+      "kind": "track",
+      "color": "red",
+      "sessions": [
+        {
+          "id": "1010",
+          "title": "Leading Engineering Teams Through the GenAI Transition: Lessons From Building Agentic Products",
+          "description": "Learn how to lead engineering teams through the GenAI transition and build agentic products",
+          "start": "11:30",
+          "end": "12:00",
+          "kind": "Talk",
+          "speakers": [
+            "Suresh Gupta"
+          ]
+        },
+        {
+          "id": "1011",
+          "title": "AI revolution in Software Craftmanship",
+          "description": "Explore how AI is revolutionizing software craftsmanship and development practices",
+          "start": "12:00",
+          "end": "12:30",
+          "kind": "Talk",
+          "speakers": [
+            "Sandeep Jain"
+          ]
+        },
+        {
+          "id": "1012",
+          "title": "Building Multi-Agent Systems with Google A2A & ADK",
+          "description": "Learn how to build multi-agent systems using Google A2A and ADK",
+          "start": "12:30",
+          "end": "13:00",
+          "kind": "Talk",
+          "speakers": [
+            "Gaurav Kheterpal"
+          ]
+        },
+        {
+          "id": "1012b",
+          "title": "Compose Navigation made easy with Navigation 3",
+          "description": "Learn how to simplify Compose navigation with Navigation 3",
+          "start": "14:00",
+          "end": "14:30",
+          "kind": "Talk",
+          "speakers": [
+            "Srikrishna Sakunia"
+          ]
+        },
+        {
+          "id": "1013",
+          "title": "The Agentic AI Revolution: Powered by Gemini on Google Cloud",
+          "description": "Explore the agentic AI revolution powered by Gemini on Google Cloud",
+          "start": "14:30",
+          "end": "15:00",
+          "kind": "Talk",
+          "speakers": [
+            "Vijaykumar Jangamashetti"
+          ]
+        },
+        {
+          "id": "1013b",
+          "title": "The Autonomous Enterprise: Building Future-Ready Workflows with Google AI",
+          "description": "Building future-ready workflows with Google AI for autonomous enterprises",
+          "start": "15:00",
+          "end": "15:30",
+          "kind": "Talk",
+          "speakers": [
+            "Abhishek Sharma"
+          ]
+        },
+        {
+          "id": "1013c",
+          "title": "Panel Discussion - Product Management & AI",
+          "description": "Panel discussion on Product Management and AI with industry experts",
+          "start": "15:30",
+          "end": "16:30",
+          "kind": "Panel",
+          "speakers": [
+            "Imtiyaz Khatib",
+            "Azhar Shaikh",
+            "Amit Godbole",
+            "Manisha Bapat",
+            "Dr. Rahul Gaikwad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "track-3",
+      "name": "Track 3",
+      "kind": "track",
+      "color": "yellow",
+      "sessions": [
+        {
+          "id": "1014",
+          "title": "Prompt, Plan, Perform - The Agentic Revolution in AI",
+          "description": "Learn about the agentic revolution in AI through prompting, planning, and performing",
+          "start": "11:30",
+          "end": "12:00",
+          "kind": "Talk",
+          "speakers": [
+            "Ashok Vishwakarma"
+          ]
+        },
+        {
+          "id": "1015",
+          "title": "Make your websites smarter, use power of AI in Web",
+          "description": "Discover how to make your websites smarter using the power of AI in web development",
+          "start": "12:00",
+          "end": "12:30",
+          "kind": "Talk",
+          "speakers": [
+            "Aarshad Devani"
+          ]
+        },
+        {
+          "id": "1016",
+          "title": "Scaling Design Systems in Flutter: Lessons from building UIKit",
+          "description": "Learn lessons from building UIKit and scaling design systems in Flutter",
+          "start": "12:30",
+          "end": "13:00",
+          "kind": "Talk",
+          "speakers": [
+            "Dhrumil Shah"
+          ]
+        },
+        {
+          "id": "1016b",
+          "title": "Human-Centred Design for Agentic Workflows",
+          "description": "Explore human-centred design principles for building agentic workflows",
+          "start": "14:00",
+          "end": "14:30",
+          "kind": "Talk",
+          "speakers": [
+            "Rutuja Pawar"
+          ]
+        },
+        {
+          "id": "1017",
+          "title": "AI Agents for Healthcare: Building with MCP Toolbox and ADK",
+          "description": "Learn how to build AI agents for healthcare using MCP Toolbox and ADK",
+          "start": "14:30",
+          "end": "15:00",
+          "kind": "Talk",
+          "speakers": [
+            "Biswanath Giri"
+          ]
+        },
+        {
+          "id": "1017a",
+          "title": "The Fail Forward Stories: Share, Grow, Unite",
+          "description": "Inspiring stories of learning from failures and growing together",
+          "start": "15:00",
+          "end": "15:30",
+          "kind": "Talk",
+          "speakers": [
+            "Rucha Kapare"
+          ]
+        },
+        {
+          "id": "1017b",
+          "title": "Panel Discussion - The Founder's Journey: Scaling, Strategy, and Building Pune's Startup Ecosyste.",
+          "description": "Panel discussion on Startups and AI with industry experts and founders",
+          "start": "15:30",
+          "end": "16:30",
+          "kind": "Panel",
+          "speakers": [
+            "Mahaveer Muttha",
+            "Amit Agrawal",
+            "Rupesh Kumar",
+            "Gaurav Tripathi",
+            "Neha Mathur"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "career-compass",
+      "name": "Career Compass",
+      "kind": "track",
+      "color": "green",
+      "sessions": [
+        {
+          "id": "1019",
+          "title": "Career Compass",
+          "description": "",
+          "start": "12:00",
+          "end": "13:00",
+          "kind": "Talk",
+          "speakers": []
+        }
+      ]
+    },
+    {
+      "id": "lounge",
+      "name": "Community Lounge",
+      "kind": "lounge",
+      "color": "green",
+      "sessions": [
+        {
+          "id": "2001",
+          "title": "Let Gemini Do the Testing: AI for Synthetic Monitoring",
+          "description": "Learn how to leverage Gemini AI for automated synthetic monitoring and testing in your applications",
+          "start": "11:30",
+          "end": "12:00",
+          "kind": "Talk",
+          "speakers": [
+            "Siddhi Khaire"
+          ]
+        },
+        {
+          "id": "2002",
+          "title": "Building Secure React Applications",
+          "description": "Best practices and techniques for building secure React applications",
+          "start": "12:00",
+          "end": "12:30",
+          "kind": "Talk",
+          "speakers": [
+            "Shashank Kumar Srivastava"
+          ]
+        },
+        {
+          "id": "2003",
+          "title": "Demystifying AI Security: Applying SAIF (Google's Secure AI Framework) to Eliminate Hidden Risks",
+          "description": "Understanding and applying Google's Secure AI Framework (SAIF) to eliminate hidden security risks in AI systems",
+          "start": "12:30",
+          "end": "13:00",
+          "kind": "Talk",
+          "speakers": [
+            "Sakshi Nasha"
+          ]
+        },
+        {
+          "id": "2004",
+          "title": "Build and Generate faster with Genkit",
+          "description": "Learn how to build and generate applications faster using Genkit framework",
+          "start": "14:00",
+          "end": "14:30",
+          "kind": "Talk",
+          "speakers": [
+            "Srushti Raybhoge"
+          ]
+        },
+        {
+          "id": "2005",
+          "title": "Pune Made Me a Platform Engineer!",
+          "description": "A journey of becoming a platform engineer in Pune's tech ecosystem",
+          "start": "14:30",
+          "end": "15:00",
+          "kind": "Talk",
+          "speakers": [
+            "Asmita Khuspe"
+          ]
+        },
+        {
+          "id": "2006",
+          "title": "GenAI in Healthcare: Building Smarter, Open, and Accessible Tech Solutions",
+          "description": "Exploring the use of Generative AI in healthcare to build smarter, open, and accessible technology solutions",
+          "start": "15:00",
+          "end": "15:30",
+          "kind": "Talk",
+          "speakers": [
+            "Abhishek Mankuskar"
+          ]
+        }
+      ]
+    }
+  ]
+}

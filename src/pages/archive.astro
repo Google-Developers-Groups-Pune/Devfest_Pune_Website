@@ -1,0 +1,481 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { editions, type ArchiveEdition } from '../lib/archive';
+import Schedule from '../components/archive/Schedule.astro';
+import Speakers from '../components/archive/Speakers.astro';
+import Sponsors from '../components/archive/Sponsors.astro';
+
+/** The three sections every edition panel carries, in the order the tabs show them. */
+const SECTIONS = [
+  { id: 'schedule', label: 'Schedule' },
+  { id: 'speakers', label: 'Speakers' },
+  { id: 'sponsors', label: 'Sponsors' },
+] as const;
+
+/** The pastel rotation the headline pills follow, as on the live pages. */
+const PILL_COLORS = ['blue', 'red', 'yellow', 'green'] as const;
+
+/** The four headline pills, in the order the design spec lists them. */
+const pillsOf = (edition: ArchiveEdition) => [
+  { value: String(edition.stats.speakers), label: 'speakers' },
+  { value: edition.stats.participants, label: 'participants' },
+  { value: String(edition.stats.sessions), label: 'sessions' },
+  { value: String(edition.stats.tracks), label: 'parallel tracks' },
+];
+
+/** Only a plain integer counts up — "1000+" would lose its plus sign. */
+const countable = (value: string) => /^\d+$/.test(value);
+
+/** One row per edition: what the year head shows. */
+const rows = editions.map((edition) => ({
+  edition,
+  meta: [edition.event.date, edition.event.venue.name].filter(Boolean).join(' · '),
+  pills: pillsOf(edition),
+}));
+
+const years = editions.map((edition) => edition.year);
+
+/** Every section panel takes the edition it belongs to. */
+type SectionPanel = (props: { edition: ArchiveEdition }) => unknown;
+
+// Every section has a panel, so a section without one has nothing to show.
+const SECTION_COMPONENTS: Record<string, SectionPanel> = {
+  schedule: Schedule,
+  speakers: Speakers,
+  sponsors: Sponsors,
+};
+
+/** "2025", or "2026, 2025 and 2024" — the years the page lists, newest first. */
+const yearList = (list: string[]) =>
+  list.length < 3 ? list.join(' and ') : `${list.slice(0, -1).join(', ')} and ${list.at(-1)}`;
+
+const description = years.length
+  ? `Every past DevFest Pune edition: the schedule, the speakers and the sponsors from ${yearList(years)}.`
+  : 'Every past DevFest Pune edition: the schedule, the speakers and the sponsors.';
+---
+
+<BaseLayout title="Archive" description={description}>
+  <section class="archive container">
+    <header class="head">
+      <h1 class="title">
+        <span class="brace" aria-hidden="true">
+          &#123;
+        </span>
+        <span class="word">Archive</span>
+        <span class="brace" aria-hidden="true">
+          &#125;
+        </span>
+      </h1>
+      <p class="text-lg intro">
+        Every DevFest Pune edition so far, kept on the record: the full schedule, the speakers on
+        stage and the sponsors who made it happen. Pick a year to browse it.
+      </p>
+    </header>
+
+    {rows.length === 0 ? (
+      <p class="empty">No editions have been archived yet.</p>
+    ) : (
+      <>
+        <!-- One tab per edition on disk; the newest is open first. -->
+        <div class="years" role="tablist" aria-label="Archive editions">
+          <span class="indicator" aria-hidden="true"></span>
+          {rows.map(({ edition }, i) => (
+            <button
+              role="tab"
+              id={`year-${edition.year}`}
+              aria-controls={`panel-${edition.year}`}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              tabindex={i === 0 ? 0 : -1}
+            >
+              {edition.year}
+            </button>
+          ))}
+        </div>
+
+        {rows.map(({ edition, meta, pills }, i) => (
+          <div
+            class="panel"
+            id={`panel-${edition.year}`}
+            role="tabpanel"
+            aria-labelledby={`year-${edition.year}`}
+            hidden={i !== 0}
+          >
+            <div class="year-head">
+              <h2 class="edition">{edition.event.name}</h2>
+              {meta && <p class="meta">{meta}</p>}
+              <ul class="stats">
+                {pills.map((pill, j) => (
+                  <li style={`--bg: var(--${PILL_COLORS[j % PILL_COLORS.length]}-pastel)`}>
+                    <strong data-count={countable(pill.value) ? pill.value : undefined}>
+                      {pill.value}
+                    </strong>
+                    <span>{pill.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- Every id inside a year panel carries the year, so nothing collides. -->
+            <div class="sections" role="tablist" aria-label="Archive sections">
+              <span class="indicator" aria-hidden="true"></span>
+              {SECTIONS.map((section, j) => (
+                <button
+                  role="tab"
+                  id={`sec-${section.id}-${edition.year}`}
+                  data-section={section.id}
+                  aria-controls={`sec-panel-${section.id}-${edition.year}`}
+                  aria-selected={j === 0 ? 'true' : 'false'}
+                  tabindex={j === 0 ? 0 : -1}
+                >
+                  {section.label}
+                </button>
+              ))}
+            </div>
+
+            {SECTIONS.map((section, j) => {
+              const Panel = SECTION_COMPONENTS[section.id];
+              return (
+                <div
+                  class="section-panel"
+                  id={`sec-panel-${section.id}-${edition.year}`}
+                  role="tabpanel"
+                  aria-labelledby={`sec-${section.id}-${edition.year}`}
+                  hidden={j !== 0}
+                >
+                  {Panel ? <Panel edition={edition} /> : null}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </>
+    )}
+  </section>
+</BaseLayout>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+
+  gsap.registerPlugin(ScrambleTextPlugin);
+
+  const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.querySelector<HTMLElement>('.archive')!;
+
+  /* ---------- tabs: the years, and the sections inside a year ---------- */
+
+  const yearList = root.querySelector<HTMLElement>('.years');
+  const yearTabs = yearList
+    ? [...yearList.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+    : [];
+
+  if (yearList && yearTabs.length) {
+    const yearIndicator = yearList.querySelector<HTMLElement>('.indicator')!;
+
+    /** Slide a tablist's pill onto a tab — the live agenda's exact technique. */
+    const moveIndicator = (indicator: HTMLElement, tab: HTMLElement, animate = true) =>
+      gsap.to(indicator, {
+        x: tab.offsetLeft,
+        y: tab.offsetTop,
+        width: tab.offsetWidth,
+        height: tab.offsetHeight,
+        duration: animate && motion ? 0.5 : 0,
+        ease: 'expo.out',
+      });
+
+    /** The section tablist one year panel carries: its own tabs, pill and panels. */
+    const sectionsOf = (panel: HTMLElement) => {
+      const list = panel.querySelector<HTMLElement>('.sections')!;
+      const tabs = [...list.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      const indicator = list.querySelector<HTMLElement>('.indicator')!;
+      const panels = tabs.map((tab) => document.getElementById(tab.getAttribute('aria-controls')!)!);
+      return { tabs, indicator, panels };
+    };
+
+    const panelOf = (tab: HTMLElement) =>
+      document.getElementById(tab.getAttribute('aria-controls')!)!;
+
+    const chosen = (tabs: HTMLButtonElement[]) =>
+      tabs.find((tab) => tab.getAttribute('aria-selected') === 'true') ?? tabs[0];
+
+    /**
+     * The section choice is shared, not per panel: a visitor who picked Sponsors stays on
+     * Sponsors when they change year.
+     */
+    let sectionChoice =
+      chosen(sectionsOf(panelOf(yearTabs[0])).tabs).dataset.section ?? 'schedule';
+
+    /** Apply the shared choice to a year panel: its tabs, their panels and its pill. */
+    const applyChoice = (panel: HTMLElement) => {
+      const { tabs, indicator, panels } = sectionsOf(panel);
+      const target = tabs.find((tab) => tab.dataset.section === sectionChoice) ?? tabs[0];
+      tabs.forEach((tab, i) => {
+        const on = tab === target;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        panels[i].hidden = !on;
+      });
+      moveIndicator(indicator, target, false);
+    };
+
+    /** Show one section inside a year panel and hide the others. */
+    const selectSection = (panel: HTMLElement, tab: HTMLButtonElement) => {
+      const { tabs, indicator, panels } = sectionsOf(panel);
+      const current = chosen(tabs);
+      if (current === tab) return;
+      sectionChoice = tab.dataset.section!;
+      current.setAttribute('aria-selected', 'false');
+      current.tabIndex = -1;
+      tab.setAttribute('aria-selected', 'true');
+      tab.tabIndex = 0;
+      panels[tabs.indexOf(current)].hidden = true;
+      const to = panels[tabs.indexOf(tab)];
+      to.hidden = false;
+      moveIndicator(indicator, tab);
+      if (motion) {
+        gsap.from(to, { opacity: 0, y: 12, duration: 0.35, ease: 'expo.out', clearProps: 'all' });
+      }
+    };
+
+    /** Show one year panel and hide the others, carrying the section choice across. */
+    const selectYear = (tab: HTMLButtonElement) => {
+      const current = chosen(yearTabs);
+      if (current === tab) return;
+      const from = panelOf(current);
+      const to = panelOf(tab);
+      current.setAttribute('aria-selected', 'false');
+      current.tabIndex = -1;
+      tab.setAttribute('aria-selected', 'true');
+      tab.tabIndex = 0;
+      moveIndicator(yearIndicator, tab);
+      from.hidden = true;
+      to.hidden = false;
+      applyChoice(to);
+      if (motion) {
+        gsap.from(to, { opacity: 0, y: 12, duration: 0.35, ease: 'expo.out', clearProps: 'all' });
+      }
+    };
+
+    yearTabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => selectYear(tab));
+      tab.addEventListener('keydown', (e) => {
+        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        const next = yearTabs[(i + step + yearTabs.length) % yearTabs.length];
+        next.focus();
+        selectYear(next);
+      });
+    });
+
+    // Each year panel has its own section tablist, so the arrow keys stay inside it.
+    for (const panel of yearTabs.map(panelOf)) {
+      const { tabs } = sectionsOf(panel);
+      tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => selectSection(panel, tab));
+        tab.addEventListener('keydown', (e) => {
+          const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!step) return;
+          e.preventDefault();
+          const next = tabs[(i + step + tabs.length) % tabs.length];
+          next.focus();
+          selectSection(panel, next);
+        });
+      });
+    }
+
+    // Open on the first year, with its section pill on the chosen section.
+    applyChoice(panelOf(chosen(yearTabs)));
+    moveIndicator(yearIndicator, chosen(yearTabs), false);
+
+    const placeIndicators = () => {
+      const year = chosen(yearTabs);
+      moveIndicator(yearIndicator, year, false);
+      const { tabs, indicator } = sectionsOf(panelOf(year));
+      moveIndicator(indicator, chosen(tabs), false);
+    };
+    window.addEventListener('resize', placeIndicators);
+    // The pill sits behind the tab, so it has to be measured once the fonts are in.
+    document.fonts.ready.then(placeIndicators);
+  }
+
+  /* ---------- entrance ---------- */
+  const activePanel = root.querySelector<HTMLElement>('.panel:not([hidden])');
+
+  if (motion) {
+    const timeline = gsap.timeline({ defaults: { ease: 'expo.out' } });
+    timeline
+      .from('.title .brace', { x: (i) => (i ? -80 : 80), opacity: 0, duration: 1 })
+      .from(
+        '.title .word',
+        { duration: 1, scrambleText: { text: '', chars: '{}<>/01_', revealDelay: 0.2 } },
+        0.1,
+      )
+      .from('.intro', { y: 20, opacity: 0, duration: 0.8 }, 0.3);
+    if (activePanel) {
+      timeline
+        .from(
+          activePanel.querySelectorAll('.stats li'),
+          { y: 30, opacity: 0, duration: 0.8, stagger: 0.08 },
+          0.4,
+        )
+        .from(
+          activePanel.querySelectorAll('[data-count]'),
+          { textContent: 0, snap: { textContent: 1 }, duration: 1.6, ease: 'power3.out' },
+          0.4,
+        );
+    }
+    if (yearList) {
+      timeline.from('.years', { y: 20, opacity: 0, duration: 0.8 }, 0.5);
+    }
+  }
+</script>
+
+<style>
+  .archive {
+    padding-block: var(--space-16) var(--space-20);
+  }
+
+  /* { Archive } */
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 0.18em;
+    margin-bottom: var(--space-6);
+    font: 700 var(--text-display) var(--font);
+    letter-spacing: -0.03em;
+  }
+  .brace {
+    font-weight: 500;
+    color: var(--green);
+    transform: translateY(-0.06em);
+  }
+  .brace:first-child {
+    color: var(--blue);
+  }
+  .intro {
+    max-width: 62ch;
+    margin: 0 0 var(--space-8);
+    color: var(--muted);
+  }
+
+  /* Tabs with a sliding black pill behind the active one */
+  .years,
+  .sections {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .years {
+    margin-bottom: var(--space-8);
+  }
+  .sections {
+    margin-bottom: var(--space-6);
+  }
+  .indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: var(--radius-pill);
+    background: var(--black);
+    pointer-events: none;
+  }
+  [role='tab'] {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-6);
+    border: 1.5px solid var(--black);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--black);
+    font: 500 var(--text-sm) var(--font);
+    cursor: pointer;
+    transition: color 200ms ease;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: var(--white);
+  }
+
+  /* The edition's header */
+  .year-head {
+    margin-bottom: var(--space-8);
+  }
+  .edition {
+    margin: 0 0 var(--space-2);
+  }
+  .meta {
+    margin: 0 0 var(--space-4);
+    color: var(--muted);
+    font: 500 var(--text-sm) var(--font);
+  }
+  .summary {
+    max-width: 68ch;
+    margin: 0 0 var(--space-6);
+    color: var(--muted);
+  }
+
+  /* Headline numbers */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+  .stats li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+  }
+  .stats strong {
+    font: 700 var(--text-h2) var(--font);
+    letter-spacing: -0.03em;
+    color: var(--black);
+  }
+  .stats span {
+    font: 500 var(--text-body) var(--font);
+  }
+
+  /* Stages that ran without a session of their own */
+  .stages {
+    margin: 0;
+    color: var(--muted);
+    font: 500 var(--text-sm) var(--font);
+  }
+
+  /* A page with no editions to show says so, quietly */
+  .empty {
+    margin: 0;
+    padding-block: var(--space-4);
+    color: var(--muted);
+    font: 500 var(--text-body) var(--font);
+  }
+
+  /* Mobile: the tab rows scroll sideways rather than wrapping into a tall stack */
+  @media (max-width: 899px) {
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats li {
+      flex-direction: column;
+      gap: 0;
+    }
+    .years,
+    .sections {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    [role='tab'] {
+      flex: none;
+    }
+  }
+</style>

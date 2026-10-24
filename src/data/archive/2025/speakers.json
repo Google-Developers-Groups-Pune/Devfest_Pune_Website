@@ -1,0 +1,264 @@
+[
+  {
+    "name": "Aarshad Devani",
+    "role": "Lead - Google Developer Group Hyderabad | AI Leader @ UN Observatory Status",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Abhishek Mankuskar",
+    "role": "Software Engineer - FrontEnd at Stealth Startup | Creator & Lead of SWOC",
+    "moderator": false,
+    "image": "abhishek-mankuskar.jpg",
+    "links": []
+  },
+  {
+    "name": "Abhishek Sharma",
+    "role": "Lead Cloud Engineer at Searce Inc | GDE - GCP | Organiser at GDG Cloud Mumbai",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Amit Agrawal",
+    "role": "Co-Founder & CTO at SRide",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Amit Godbole",
+    "role": "Chief Product Officer at FCI CCM",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Amit Modak",
+    "role": "Software Engineer at Google",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Ashok Vishwakarma",
+    "role": "Founder & CTO at Impulsive Web",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Asmita Khuspe",
+    "role": "Platform Engineer at NCS",
+    "moderator": false,
+    "image": "asmita-khuspe.jpg",
+    "links": []
+  },
+  {
+    "name": "Azhar Shaikh",
+    "role": "Executive Director, Platform Product, JPMorganChase",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Bhaskar Annadata",
+    "role": "Engineering Manager - Secure AI at Google",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Biswanath Giri",
+    "role": "Enterprise Architect in AI & Cloud, GDE Cloud",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Dharmesh Vaya",
+    "role": "Solutions Engineering at Wiz | Google Developer Expert - GCP",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Dhrumil Shah",
+    "role": "GDE - Flutter & Dart | Co-Organiser of GDG Ahmedabad | Architect at Scapia",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Dr. Rahul Gaikwad",
+    "role": "Staff Resident Solutions Architect at HashiCorp, an IBM Company",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Gaurav Kheterpal",
+    "role": "Google Developer Expert - AI",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Gaurav Tripathi",
+    "role": "Co-founder & CTO, Partex.AI",
+    "moderator": false,
+    "image": "gaurav-tripathi.jpg",
+    "links": []
+  },
+  {
+    "name": "Harsh Dattani",
+    "role": "Regional Lead - Developer Community Programs India",
+    "moderator": false,
+    "image": "harsh-dattani.jpg",
+    "links": []
+  },
+  {
+    "name": "Himanshu Jain",
+    "role": "Engineering Director, Academian",
+    "moderator": true,
+    "links": []
+  },
+  {
+    "name": "Imtiyaz Khatib",
+    "role": "Head, Customer Experience Design & Product Management, Avalara",
+    "moderator": true,
+    "links": []
+  },
+  {
+    "name": "Jayesh Prajapati",
+    "role": "Head - Pune Technology Center, SLB (Schlumberger)",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Jyoti Jain",
+    "role": "Product Analyst at JP Morgan Chase and Co.",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Mahaveer Muttha",
+    "role": "Co Founder, Birdvision",
+    "moderator": true,
+    "image": "mahaveer-muttha.jpg",
+    "links": []
+  },
+  {
+    "name": "Manisha Bapat",
+    "role": "Product Owner Specialist, FIS",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Mukta Aphale",
+    "role": "Director, Evangelist at Last9",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Neha Mathur",
+    "role": "Co-Founder and Director at HyrGPT",
+    "moderator": false,
+    "image": "neha-mathur.jpg",
+    "links": []
+  },
+  {
+    "name": "Rohit Sharma",
+    "role": "Practice Leader and Site Lead at HPE",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Rucha Kapare",
+    "role": "Global Head of DEI Data, Springer Nature",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Rupesh Kumar",
+    "role": "Chief Technical Officer at One Card",
+    "moderator": false,
+    "image": "rupesh-kumar.jpg",
+    "links": []
+  },
+  {
+    "name": "Rutuja Pawar",
+    "role": "Data and AI Consultant at Accenture",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Sakshi Nasha",
+    "role": "Senior Software Engineer at Cohesity",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Sandeep Jain",
+    "role": "Head of Engineering at Gruve.ai",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Shashank Kumar Srivastava",
+    "role": "SDE-I at NonStop io",
+    "moderator": false,
+    "image": "shashank-kumar-srivastava.jpg",
+    "links": []
+  },
+  {
+    "name": "Shivani Poddar",
+    "role": "Head of Engineering, Jules at Google Labs",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Siddhi Khaire",
+    "role": "Site Reliability Engineer",
+    "moderator": false,
+    "image": "siddhi-khaire.jpg",
+    "links": []
+  },
+  {
+    "name": "Srikrishna Sakunia",
+    "role": "Developer Relation Engineer at Google",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Srushti Raybhoge",
+    "role": "Software Engineer 2 at Addepar",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Supriya Rao",
+    "role": "Managing Director at ClearRoute",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Suresh Gupta",
+    "role": "Director Engineering – Gen AI at GoDaddy",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Vaibhav Malpani",
+    "role": "Google Developer Expert - GCP | Python Cloud Developer at Incedo Inc.",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Vijaykumar Jangamashetti",
+    "role": "Googler, Trusted Advisor, Senior Cloud Technical Consulting Architect",
+    "moderator": false,
+    "links": []
+  },
+  {
+    "name": "Vishal Virani",
+    "role": "CEO & Founder, Rocket.New",
+    "moderator": false,
+    "image": "vishal-virani.jpeg",
+    "links": []
+  },
+  {
+    "name": "Yogesh Kulkarni",
+    "role": "AI Coach | Organizer at Pune AI Community",
+    "moderator": false,
+    "links": []
+  }
+]

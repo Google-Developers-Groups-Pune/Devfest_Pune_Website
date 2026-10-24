@@ -1,0 +1,154 @@
+---
+import type { ArchiveEdition } from '../../lib/archive';
+
+interface Props {
+  edition: ArchiveEdition;
+}
+
+const { edition } = Astro.props;
+
+/** The pastel rotation the tiers follow, in tier order, as the live sponsors page does. */
+const PASTELS = ['blue', 'red', 'yellow', 'green'] as const;
+
+/**
+ * The tiers, each carrying the pastel the rotation hands it. The tier's own `color` from
+ * the JSON is ignored: most of them carry `#FFF`, which is invisible on a white plate.
+ * A tier with no sponsors is left out — a heading with nothing under it is a hole.
+ */
+const tiers = edition.tiers
+  .map((tier, i) => ({ ...tier, color: PASTELS[i % PASTELS.length] }))
+  .filter((tier) => tier.sponsors.length > 0);
+
+/** The tiers are listed from the title sponsor down, so the first one is the title tier. */
+const LEAD = 0;
+
+const sponsorCount = tiers.reduce((total, tier) => total + tier.sponsors.length, 0);
+---
+
+{
+  sponsorCount > 0 ? (
+    <div class="sponsors">
+      {tiers.map((tier, i) => (
+        <section
+          class="tier"
+          class:list={[i === LEAD && 'tier--lead']}
+          style={`--c: var(--${tier.color}); --bg: var(--${tier.color}-pastel)`}
+        >
+          <h3 class="tier-heading">{tier.category}</h3>
+          <ul class="plates">
+            {tier.sponsors.map((sponsor) => (
+              <li>
+                <a class="sponsor" href={sponsor.link} rel="noopener" target="_blank">
+                  <span class="plate">
+                    <img src={sponsor.logo} alt="" loading="lazy" decoding="async" />
+                  </span>
+                  <span class="name">{sponsor.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  ) : (
+    <p class="no-sponsors">No sponsors were recorded for this edition.</p>
+  )
+}
+
+<style>
+  /* The tiers: a stack of pastel bands, separated by space and nothing else */
+  .sponsors {
+    display: grid;
+    gap: var(--gutter);
+  }
+  .tier {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+  }
+  /* The tier's name, in the tier's colour — as an underline, because the pastel behind
+     it is too light to carry coloured text. */
+  .tier-heading {
+    margin: 0 0 var(--space-4);
+    color: var(--black);
+    font: 700 var(--text-h4) var(--font);
+    text-decoration: underline;
+    text-decoration-color: var(--c);
+    text-decoration-thickness: var(--space-1);
+    text-underline-offset: var(--space-2);
+  }
+
+  /* The sponsors in the tier, as white plates */
+  .plates {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sponsor {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    color: var(--black);
+    text-decoration: none;
+  }
+  /* The plate: a white rounded card with the logo centred */
+  .plate {
+    display: grid;
+    place-items: center;
+    min-height: var(--space-30);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    transition: translate 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* A plain lift on hover: the archive is a record, not a pitch */
+  .sponsor:hover .plate {
+    translate: 0 calc(-1 * var(--space-1));
+  }
+  .plate img {
+    max-width: 100%;
+    max-height: var(--space-16);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+  /* The name under the plate is the link's name, so the logo itself is decorative */
+  .name {
+    font: 600 var(--text-sm) var(--font);
+    text-align: center;
+  }
+
+  /* The title sponsor: the top tier, and the only one with a plate of its own size */
+  .tier--lead .plates {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tier--lead .plate {
+    min-height: calc(var(--space-30) + var(--space-20));
+  }
+  .tier--lead .plate img {
+    /* The live sponsors page gives the title sponsor its own wide stage, and the same
+       width for the logo on it. */
+    width: min(560px, 80%);
+    max-height: var(--space-30);
+  }
+
+  /* An edition with no sponsors says so, quietly */
+  .no-sponsors {
+    margin: 0;
+    padding-block: var(--space-4);
+    color: var(--muted);
+    font: 500 var(--text-body) var(--font);
+  }
+
+  @media (max-width: 899px) {
+    .plates {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    .tier--lead .plate img {
+      width: 80%;
+    }
+  }
+</style>
